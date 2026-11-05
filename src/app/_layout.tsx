@@ -1,3 +1,5 @@
+import '@/lib/skiaIds';
+
 import { IBMPlexMono_400Regular, IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono';
 import {
   InterTight_200ExtraLight,
