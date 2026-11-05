@@ -1,13 +1,14 @@
 {
   "expo": {
-    "name": "mauna-kea",
+    "name": "Mauna Kea",
     "slug": "mauna-kea",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.kyleyugawa.maunakea"
     },
     "android": {
       "adaptiveIcon": {
@@ -16,10 +17,19 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.kyleyugawa.maunakea"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "scheme": "maunakea",
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
