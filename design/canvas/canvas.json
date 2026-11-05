@@ -1,0 +1,478 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Capture.dc.html": {
+      "h": 844,
+      "page": "current",
+      "radius": 44,
+      "title": "Capture",
+      "w": 390,
+      "x": 0,
+      "y": 2444
+    },
+    "MacrosA.dc.html": {
+      "h": 360,
+      "page": "explore",
+      "title": "Macros · A one bar",
+      "w": 390,
+      "x": 2350,
+      "y": 1740
+    },
+    "MacrosB.dc.html": {
+      "h": 360,
+      "page": "explore",
+      "title": "Macros · B numbers",
+      "w": 390,
+      "x": 2820,
+      "y": 1740
+    },
+    "MacrosC.dc.html": {
+      "h": 360,
+      "page": "explore",
+      "title": "Macros · C circles",
+      "w": 390,
+      "x": 3290,
+      "y": 1740
+    },
+    "MacrosD.dc.html": {
+      "h": 360,
+      "page": "explore",
+      "title": "Macros · D columns",
+      "w": 390,
+      "x": 3760,
+      "y": 1740
+    },
+    "MacrosE.dc.html": {
+      "h": 480,
+      "page": "explore",
+      "title": "Macros · E day + macros",
+      "w": 390,
+      "x": 470,
+      "y": 1740
+    },
+    "MacrosF.dc.html": {
+      "h": 480,
+      "page": "explore",
+      "title": "Macros · F packed",
+      "w": 390,
+      "x": 940,
+      "y": 1740
+    },
+    "MacrosG.dc.html": {
+      "h": 480,
+      "page": "explore",
+      "title": "Macros · G equation",
+      "w": 390,
+      "x": 1410,
+      "y": 1740
+    },
+    "MacrosH.dc.html": {
+      "h": 480,
+      "page": "explore",
+      "title": "Macros · H tokens",
+      "w": 390,
+      "x": 1880,
+      "y": 1740
+    },
+    "MacrosI.dc.html": {
+      "h": 700,
+      "page": "explore",
+      "title": "Macros · I oils",
+      "w": 390,
+      "x": 0,
+      "y": 1740
+    },
+    "Main.dc.html": {
+      "h": 844,
+      "page": "explore",
+      "radius": 44,
+      "title": "Today · first pass",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "Review.dc.html": {
+      "h": 844,
+      "page": "current",
+      "radius": 44,
+      "title": "Sunday review",
+      "w": 390,
+      "x": 940,
+      "y": 2444
+    },
+    "TodayCircles.dc.html": {
+      "h": 844,
+      "page": "explore",
+      "radius": 44,
+      "title": "Today · two circles",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "TodayKJ1.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "kJ anim 1 · breathing",
+      "w": 390,
+      "x": 0,
+      "y": 1240
+    },
+    "TodayKJ10.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "Macros as ticks · 2 fueling clock",
+      "w": 390,
+      "x": 4230,
+      "y": 1258
+    },
+    "TodayKJ11.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "Macros as ticks · 3 goal rings",
+      "w": 390,
+      "x": 4700,
+      "y": 1258
+    },
+    "TodayKJ2.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "kJ anim 2 · grow on sync",
+      "w": 390,
+      "x": 470,
+      "y": 1240
+    },
+    "TodayKJ3.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "kJ anim 3 · power-curve replay",
+      "w": 390,
+      "x": 940,
+      "y": 1240
+    },
+    "TodayKJ4.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "kJ anim 4 · heat under frost",
+      "w": 390,
+      "x": 1410,
+      "y": 1240
+    },
+    "TodayKJ5.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "kJ anim 5 · edge ripple",
+      "w": 390,
+      "x": 1880,
+      "y": 1240
+    },
+    "TodayKJ6.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "kJ anim 6 · unfinished pulse (mid-day)",
+      "w": 390,
+      "x": 2350,
+      "y": 1240
+    },
+    "TodayKJ7.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "kJ anim 7 · water reflection",
+      "w": 390,
+      "x": 2820,
+      "y": 1240
+    },
+    "TodayKJ8.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "kJ 8 · power dial (pull down)",
+      "w": 390,
+      "x": 3290,
+      "y": 1240
+    },
+    "TodayKJ9.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "Macros as ticks · 1 arcs",
+      "w": 390,
+      "x": 3760,
+      "y": 1240
+    },
+    "TodayLayered.dc.html": {
+      "h": 844,
+      "page": "explore",
+      "radius": 44,
+      "title": "Today · layered film",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "TodayLayeredB.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "radius": 44,
+      "title": "Today · prototype (sun + water)",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "TodayLayeredBPartial.dc.html": {
+      "h": 844,
+      "page": "explore",
+      "radius": 44,
+      "title": "Today · layered B · partial day",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "TodayOils.dc.html": {
+      "h": 1380,
+      "page": "explore",
+      "radius": 44,
+      "title": "Today · oils (scroll)",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "TodayRefined.dc.html": {
+      "h": 844,
+      "page": "explore",
+      "radius": 44,
+      "title": "Today · refined",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "Train.dc.html": {
+      "h": 844,
+      "page": "current",
+      "radius": 44,
+      "title": "Train",
+      "w": 390,
+      "x": 470,
+      "y": 2444
+    },
+    "Training.dc.html": {
+      "h": 1220,
+      "page": "current",
+      "radius": 44,
+      "title": "Training (Train + Progress combined)",
+      "w": 390,
+      "x": 1410,
+      "y": 2444
+    },
+    "ZoneA.dc.html": {
+      "h": 470,
+      "page": "current",
+      "title": "Zones · A current (7 rows)",
+      "w": 390,
+      "x": 0,
+      "y": 3924
+    },
+    "ZoneB.dc.html": {
+      "h": 330,
+      "page": "current",
+      "title": "Zones · B tick strip + 3 numbers (tap a zone)",
+      "w": 390,
+      "x": 470,
+      "y": 3924
+    },
+    "ZoneC.dc.html": {
+      "h": 400,
+      "page": "current",
+      "title": "Zones · C sunburst dial + 3 numbers",
+      "w": 390,
+      "x": 940,
+      "y": 3924
+    },
+    "ZoneD.dc.html": {
+      "h": 290,
+      "page": "current",
+      "title": "Zones · D one segmented bar + 3 numbers",
+      "w": 390,
+      "x": 1410,
+      "y": 3924
+    },
+    "ZoneE.dc.html": {
+      "h": 372,
+      "page": "current",
+      "title": "Zones · E power ↑ / heart rate ↓, no swipe",
+      "w": 390,
+      "x": 1880,
+      "y": 3924
+    },
+    "ZoneB2.dc.html": {
+      "x": 2350,
+      "y": 3924,
+      "w": 390,
+      "h": 334,
+      "title": "Zones · B2 tick strip with zones marked",
+      "page": "current"
+    },
+    "TodayLayeredV1.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "explore",
+      "radius": 44,
+      "title": "Today · prototype v1 (liquid macros)",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-30T21:35:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "page": "current",
+    "view": "canvas"
+  },
+  "noteOrder": [
+    "title",
+    "kjScale",
+    "kjAnim",
+    "otherScreens",
+    "todayExplore",
+    "macroExplore",
+    "zoneMods"
+  ],
+  "notes": {
+    "kjAnim": {
+      "kind": "title1",
+      "maxW": 5090,
+      "page": "current",
+      "text": "kJ circle — animation options",
+      "w": 240,
+      "x": 0,
+      "y": 1000
+    },
+    "kjScale": {
+      "page": "current",
+      "text": "kJ circle sizing\n\n1. Area, not radius: r = 175px × √(kJ ÷ 1,300). Twice the work = twice the disc area.\n\n2. One fixed scale every day, anchored to the biggest planned ride (1,300 kJ long climb = 175px, nearly full width).\n   300 kJ → 84px · 312 → 86px · 600 → 119px · 653 → 124px · 1,300 → 175px\n\n3. Target ring uses the same formula. Over or under = the gap between disc and dashed ring (partial day: 312 inside 600 → a 33px gap).\n\n4. Shared with calories: 1 kJ of ride work ≈ 1 kcal burned, so a 653 kJ disc and a 653 kcal meal would be the same size.\n\n5. Input is real work only: kJ = avg power × moving time ÷ 1000. Never Strava calories. No power data → empty ring, no guessed fill.\n\n6. Over the scale (>1,300 kJ): let it bleed off the edges, or re-anchor to the season's biggest planned day before you get there.",
+      "w": 380,
+      "x": 470,
+      "y": 0
+    },
+    "macroExplore": {
+      "kind": "title1",
+      "maxW": 4150,
+      "page": "explore",
+      "text": "Macros — explorations",
+      "w": 240,
+      "x": 0,
+      "y": 1500
+    },
+    "otherScreens": {
+      "kind": "title1",
+      "maxW": 1800,
+      "page": "current",
+      "text": "Other screens — first pass",
+      "w": 240,
+      "x": 0,
+      "y": 2204
+    },
+    "title": {
+      "kind": "title1",
+      "maxW": 850,
+      "page": "current",
+      "text": "Today — current prototype",
+      "w": 240,
+      "x": 0,
+      "y": -260
+    },
+    "todayExplore": {
+      "kind": "title1",
+      "maxW": 3210,
+      "page": "explore",
+      "text": "Today — explorations, newest to oldest",
+      "w": 240,
+      "x": 0,
+      "y": -260
+    },
+    "zoneMods": {
+      "kind": "title1",
+      "maxW": 2740,
+      "page": "current",
+      "text": "Time in zone — treatments",
+      "w": 240,
+      "x": 3,
+      "y": 3723
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "MacrosA.dc.html",
+    "MacrosB.dc.html",
+    "MacrosC.dc.html",
+    "MacrosD.dc.html",
+    "MacrosE.dc.html",
+    "MacrosF.dc.html",
+    "MacrosG.dc.html",
+    "MacrosH.dc.html",
+    "TodayRefined.dc.html",
+    "MacrosI.dc.html",
+    "TodayCircles.dc.html",
+    "TodayOils.dc.html",
+    "TodayLayered.dc.html",
+    "TodayLayeredBPartial.dc.html",
+    "Capture.dc.html",
+    "Train.dc.html",
+    "Review.dc.html",
+    "TodayLayeredB.dc.html",
+    "TodayKJ1.dc.html",
+    "TodayKJ2.dc.html",
+    "TodayKJ3.dc.html",
+    "TodayKJ4.dc.html",
+    "TodayKJ5.dc.html",
+    "TodayKJ6.dc.html",
+    "Training.dc.html",
+    "TodayKJ7.dc.html",
+    "TodayKJ8.dc.html",
+    "TodayKJ9.dc.html",
+    "TodayKJ10.dc.html",
+    "TodayKJ11.dc.html",
+    "ZoneA.dc.html",
+    "ZoneB.dc.html",
+    "ZoneC.dc.html",
+    "ZoneD.dc.html",
+    "ZoneE.dc.html",
+    "ZoneB2.dc.html",
+    "TodayLayeredV1.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "current",
+      "name": "Current prototype"
+    },
+    {
+      "id": "explore",
+      "name": "Explorations"
+    }
+  ],
+  "title": "Mauna Kea Mobile"
+}

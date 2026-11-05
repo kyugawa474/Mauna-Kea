@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Macros D</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 390px; height: 360px; box-sizing: border-box; background: #E5E4E0; color: #111111; font-family: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif; padding: 28px 20px; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+  <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase"><span>D · Columns</span><span style="color: #66655F">Fill to target</span></div>
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px"><div style="display: flex; flex-direction: column; gap: 8px"><span style="font-size: 22px; font-weight: 300">107<span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #66655F"> / 140 g</span></span><div style="height: 150px; background: #DAD9D4; position: relative"><div style="position: absolute; left: 0; right: 0; bottom: 0; height: 76%; background: #FF4F1A"></div></div><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #111111">Protein</span></div><div style="display: flex; flex-direction: column; gap: 8px"><span style="font-size: 22px; font-weight: 300">14<span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #66655F"> / 311 g</span></span><div style="height: 150px; background: #DAD9D4; position: relative"><div style="position: absolute; left: 0; right: 0; bottom: 0; height: 5%; background: #111111"></div></div><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #111111">Carbs</span></div><div style="display: flex; flex-direction: column; gap: 8px"><span style="font-size: 22px; font-weight: 300">30<span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #66655F"> / 67 g</span></span><div style="height: 150px; background: #DAD9D4; position: relative"><div style="position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: #9A9893"></div></div><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #111111">Fat</span></div></div>
+  <span style="font-size: 13px; color: #66655F; line-height: 1.4; margin-top: auto">Columns: three tall sharp tanks that fill from the bottom. Easiest to compare at a glance, but they take the most height.</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":360}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

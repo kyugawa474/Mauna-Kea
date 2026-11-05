@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Capture</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#111111}a:hover{color:#000000}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #E5E4E0; color: #111111; font-family: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 56px 20px 0 20px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <a href="Main.dc.html" aria-label="Close" style="width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid #111111; text-decoration: none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="1.75" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+      </a>
+      <h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em">Log food</h1>
+      <span style="width: 44px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #66655F; text-align: right">3:10 PM</span>
+    </div>
+
+    <div role="group" aria-label="Meal" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid #111111">
+      <sc-for list="{{meals}}" as="meal" hint-placeholder-count="4">
+        <button onClick="{{meal.pick}}" style="height: 40px; border: 0; border-left: {{meal.divider}}; background: {{meal.bg}}; color: {{meal.fg}}; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; padding: 0">{{meal.label}}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="padding: 40px 20px 0 20px; display: flex; flex-direction: column">
+    <div style="display: flex; justify-content: space-between; margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; border-bottom: 1px solid #111111; padding-bottom: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase">
+      <span>Recent</span>
+    </div>
+    <sc-for list="{{recents}}" as="r" hint-placeholder-count="4">
+      <div style="display: flex; align-items: center; gap: 12px; margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; padding-top: 12px; padding-bottom: 12px; border-bottom: 1px solid #CFCEC9">
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0">
+          <span style="font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #66655F">{{r.kcal}} kcal</span>
+        </span>
+        <button aria-label="Add {{r.name}}" style="width: 40px; height: 40px; border-radius: 50%; border: 0; background: #111111; display: grid; place-items: center; cursor: pointer; padding: 0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F1F0ED" stroke-width="2" aria-hidden="true"><path d="M12 4v16M4 12h16"></path></svg>
+        </button>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { meal: 'Snack' }; }
+  renderVals() {
+    var self = this;
+    var names = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+    var full = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+    return {
+      meals: names.map(function (n, i) {
+        var on = self.state.meal === full[i] || self.state.meal === n;
+        return { label: n, bg: on ? '#111111' : 'transparent', fg: on ? '#F1F0ED' : '#111111',
+          divider: i === 0 ? '0' : '1px solid #111111',
+          pick: function () { self.setState({ meal: full[i] }); } };
+      }),
+      recents: [
+        { name: 'Oikos Triple Zero, mixed berry', kcal: 90, p: 15, c: 6, f: 0 },
+        { name: 'Oikos + ½ cup granola', kcal: 330, p: 20.5, c: 38.5, f: 10 },
+        { name: 'Whey shake + 2 cups 2% milk', kcal: 420, p: 41, c: 32, f: 13.5 },
+        { name: 'CookUnity Mexican Chicken Bowl', kcal: 553, p: 52, c: 55, f: 13.6 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Train</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#111111}a:hover{color:#000000}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #E5E4E0; color: #111111; font-family: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="padding: 56px 20px 0 20px; display: flex; flex-direction: column; gap: 22px; flex: 1 1 auto">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #66655F">Build 3 · Week 1 of 3</span>
+      <h1 style="margin: 0; font-size: 40px; font-weight: 600; letter-spacing: -0.03em; line-height: 0.9">Train</h1>
+    </div>
+
+    <div style="display: flex; gap: 6px" role="img" aria-label="Rides and other sessions over the last 12 weeks">
+      <div style="display: grid; grid-template-rows: repeat(7, 22px); row-gap: 5px; width: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #9A9893" aria-hidden="true">
+        <span style="display: flex; align-items: center">M</span><span></span><span style="display: flex; align-items: center">W</span><span></span><span style="display: flex; align-items: center">F</span><span></span><span style="display: flex; align-items: center">S</span>
+      </div>
+      <div style="flex: 1; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr))">
+        <sc-for list="{{weeks}}" as="wk" hint-placeholder-count="12">
+          <div style="display: grid; grid-template-rows: repeat(7, 22px); row-gap: 5px; justify-items: center">
+            <sc-for list="{{wk.days}}" as="c" hint-placeholder-count="7">
+              <svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true">
+                <circle cx="8" cy="8" r="{{c.todayR}}" fill="none" stroke="#111111" stroke-width="1.1"></circle>
+                <circle cx="8" cy="8" r="{{c.ringR}}" fill="none" stroke="#FF4F1A" stroke-width="1.5"></circle>
+                <circle cx="8" cy="8" r="{{c.fillR}}" fill="{{c.fill}}"></circle>
+              </svg>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display: flex; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #66655F; padding-left: 18px">
+      <span style="display: flex; align-items: center; gap: 5px"><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5" fill="#FF4F1A"></circle></svg>Ride</span>
+      <span style="display: flex; align-items: center; gap: 5px"><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.75" fill="none" stroke="#FF4F1A" stroke-width="1.5"></circle></svg>Jiu-jitsu &amp; other</span>
+    </div>
+
+    <div style="margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; border-top: 1px solid #111111; padding-top: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase">This week</span>
+        <span><span style="font-size: 34px; font-weight: 300; letter-spacing: -0.03em">1,483</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #66655F"> / 3,394 kJ</span></span>
+      </div>
+      <div style="height: 8px; background: #DAD9D4; position: relative" role="img" aria-label="1,483 of 3,394 kJ"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: 44%; background: #FF4F1A"></div></div>
+    </div>
+
+    <div style="display: flex; flex-direction: column">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; padding-bottom: 8px; border-bottom: 1px solid #111111">Up next</span>
+      <sc-for list="{{plan}}" as="d" hint-placeholder-count="2">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; padding-top: 14px; padding-bottom: 14px; border-bottom: 1px solid #CFCEC9">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="align-self: center; margin-right: 12px"><circle cx="8" cy="8" r="5" fill="none" stroke="#FF4F1A" stroke-width="1.5"></circle></svg>
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 3px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #66655F">{{d.day}}</span>
+            <span style="font-size: 17px; font-weight: 500">{{d.session}}</span>
+          </span>
+          <span style="font-size: 22px; font-weight: 300; letter-spacing: -0.02em">{{d.plan}}<span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #66655F"> kJ</span></span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <nav aria-label="Main" style="height: 84px; box-sizing: border-box; border-top: 1px solid #111111; background: #E5E4E0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; padding-top: 10px">
+    <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; color: #66655F; min-height: 44px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#66655F" stroke-width="1.5" aria-hidden="true"><rect x="4" y="4" width="16" height="16"></rect></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase">Today</span>
+    </a>
+    <a href="Capture.dc.html" aria-label="Log food" style="display: flex; justify-content: center; text-decoration: none; margin-top: -26px">
+      <span style="width: 58px; height: 58px; border-radius: 50%; background: #FF4F1A; display: grid; place-items: center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" aria-hidden="true"><path d="M12 4v16M4 12h16"></path></svg>
+      </span>
+    </a>
+    <a href="Train.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; color: #111111; min-height: 44px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#111111" aria-hidden="true"><circle cx="6" cy="8" r="2"></circle><circle cx="12" cy="8" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="6" cy="16" r="2"></circle><circle cx="12" cy="16" r="2"></circle><circle cx="18" cy="16" r="2"></circle></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase">Train</span>
+    </a>
+    <a href="Review.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; color: #66655F; min-height: 44px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#66655F" stroke-width="1.5" aria-hidden="true"><path d="M3 20h18"></path><rect x="5" y="12" width="3" height="8"></rect><rect x="10.5" y="8" width="3" height="12"></rect><rect x="16" y="4" width="3" height="16"></rect></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase">Progress</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // 12 weeks ending week of Oct 19 2026, Mon→Sun. r ride, o other, b both, . rest, f future
+    var codes = ['rrorro.', '.rrrror', '..oo..r', '.ror.r.', 'rrrorr.', '.rorrrb', 'ororrr.', 'rrrro.o', 'ororrr.', 'rr.r.r.', 'oroorro', 'ob.rfff'];
+    var weeks = codes.map(function (col, w) {
+      return { days: col.split('').map(function (k, d) {
+        var today = (w === 11 && d === 3);
+        var c = { todayR: today ? 7.6 : 0, ringR: 0, fillR: 1.5, fill: '#B8B6B0' };
+        if (k === 'f') { c.fill = '#CFCEC9'; }
+        if (k === 'r') { c.fillR = 5.5; c.fill = '#FF4F1A'; }
+        if (k === 'o') { c.fillR = 0; c.ringR = 4.75; }
+        if (k === 'b') { c.fillR = 4; c.fill = '#FF4F1A'; c.ringR = 6.8; }
+        if (today && k === 'b') { c.todayR = 0; }
+        return c;
+      }) };
+    });
+    var plan = [
+      { day: 'Fri', session: 'FCR group ride', plan: '~700' },
+      { day: 'Sat', session: 'Long climb', plan: '~1,300' }
+    ];
+    return {
+      weeks: weeks,
+      plan: plan
+    };
+  }
+}
+</script>
+</body>
+</html>

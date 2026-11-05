@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Macros A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 390px; height: 360px; box-sizing: border-box; background: #E5E4E0; color: #111111; font-family: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif; padding: 28px 20px; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+  <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase"><span>A · One bar</span><span style="color: #66655F">Share of kcal</span></div>
+  <div style="display: flex; gap: 3px; margin-top: 24px" role="img" aria-label="Macros as one bar, segment width = share of calorie target"><div style="flex: 0 0 calc(23.3% - 2px); height: 36px; background: #DAD9D4; position: relative"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: 76%; background: #FF4F1A"></div></div><div style="flex: 0 0 calc(51.7% - 2px); height: 36px; background: #DAD9D4; position: relative"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: 5%; background: #111111"></div></div><div style="flex: 0 0 calc(25.1% - 2px); height: 36px; background: #DAD9D4; position: relative"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: 45%; background: #9A9893"></div></div></div>
+  <div style="display: flex; gap: 3px"><div style="flex: 0 0 calc(23.3% - 2px); display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #111111">Protein</span><span style="font-size: 20px; font-weight: 300">33<span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #66655F"> g left</span></span></div><div style="flex: 0 0 calc(51.7% - 2px); display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #111111">Carbs</span><span style="font-size: 20px; font-weight: 300">297<span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #66655F"> g left</span></span></div><div style="flex: 0 0 calc(25.1% - 2px); display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #111111">Fat</span><span style="font-size: 20px; font-weight: 300">37<span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #66655F"> g left</span></span></div></div>
+  <span style="font-size: 13px; color: #66655F; line-height: 1.4; margin-top: auto">One bar for the day's calories, split by each macro's share of the target. Carbs fill half the bar, so a 14 g day reads as a big empty gap.</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":360}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

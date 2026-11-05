@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Today</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#111111}a:hover{color:#000000}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #E5E4E0; color: #111111; font-family: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif; display: flex; flex-direction: column; position: relative; overflow: hidden">
+
+  <div style="padding: 56px 20px 0 20px; display: flex; flex-direction: column; flex: 1 1 auto">
+
+    <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 24px">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #66655F">Thu · Oct 22</span>
+      <h1 style="margin: 0; font-size: 40px; font-weight: 600; letter-spacing: -0.03em; line-height: 0.9">Today</h1>
+    </div>
+
+    <section aria-label="Ride" style="margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; border-top: 1px solid #111111; padding-top: 16px; padding-bottom: 22px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase">Ride</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #66655F">Zone 2</span></div>
+      <div style="display: flex; align-items: baseline; gap: 8px">
+        <span style="font-size: 56px; font-weight: 200; letter-spacing: -0.04em; line-height: 0.85">653</span>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #66655F">/ 600 kJ</span>
+      </div>
+      <div style="height: 8px; background: #DAD9D4; position: relative" role="img" aria-label="653 of 600 kJ ridden"><div style="position: absolute; inset: 0; background: #FF4F1A"></div></div>
+    </section>
+
+    <section aria-label="Fuel" style="margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; border-top: 1px solid #111111; padding-top: 16px; padding-bottom: 22px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase">Eat</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #66655F">2,403 kcal today</span></div>
+      <div style="display: flex; align-items: baseline; gap: 8px">
+        <span style="font-size: 56px; font-weight: 200; letter-spacing: -0.04em; line-height: 0.85">1,611</span>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #66655F">kcal left</span>
+      </div>
+      <div style="height: 8px; background: #DAD9D4; position: relative" role="img" aria-label="792 of 2,403 kcal eaten"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: 33%; background: #111111"></div></div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding-top: 10px">
+        <sc-for list="{{macros}}" as="m" hint-placeholder-count="3">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #66655F">{{m.name}}</span>
+            <span style="font-size: 22px; font-weight: 300; letter-spacing: -0.02em">{{m.left}}<span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #66655F"> g left</span></span>
+            <div style="height: 4px; background: #DAD9D4; position: relative" aria-hidden="true"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{m.pct}}; background: {{m.color}}"></div></div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section aria-label="Logged today" style="margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; border-top: 1px solid #111111; padding-top: 16px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase">Logged</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #66655F">4 of 5</span></div>
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center">
+        <sc-for list="{{logs}}" as="l" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+            <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+              <circle cx="20" cy="20" r="{{l.r}}" fill="{{l.fill}}" stroke="{{l.stroke}}" stroke-width="1.25"></circle>
+              <path d="M13 20.5l4.5 4.5 9-9.5" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="{{l.check}}"></path>
+            </svg>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: {{l.text}}">{{l.label}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+
+  <nav aria-label="Main" style="height: 84px; box-sizing: border-box; border-top: 1px solid #111111; background: #E5E4E0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; padding-top: 10px">
+    <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; color: #111111; min-height: 44px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#111111" aria-hidden="true"><rect x="4" y="4" width="16" height="16"></rect></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase">Today</span>
+    </a>
+    <a href="Capture.dc.html" aria-label="Log food" style="display: flex; justify-content: center; text-decoration: none; margin-top: -26px">
+      <span style="width: 58px; height: 58px; border-radius: 50%; background: #FF4F1A; display: grid; place-items: center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" aria-hidden="true"><path d="M12 4v16M4 12h16"></path></svg>
+      </span>
+    </a>
+    <a href="Train.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; color: #66655F; min-height: 44px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#66655F" stroke-width="1.5" aria-hidden="true"><circle cx="6" cy="8" r="2"></circle><circle cx="12" cy="8" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="6" cy="16" r="2"></circle><circle cx="12" cy="16" r="2"></circle><circle cx="18" cy="16" r="2"></circle></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase">Train</span>
+    </a>
+    <a href="Review.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; color: #66655F; min-height: 44px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#66655F" stroke-width="1.5" aria-hidden="true"><path d="M3 20h18"></path><rect x="5" y="12" width="3" height="8"></rect><rect x="10.5" y="8" width="3" height="12"></rect><rect x="16" y="4" width="3" height="16"></rect></svg>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase">Progress</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var rows = [
+      { name: 'Protein', eaten: 107, target: 140, color: '#FF4F1A' },
+      { name: 'Carbs', eaten: 14, target: 311, color: '#111111' },
+      { name: 'Fat', eaten: 30, target: 67, color: '#9A9893' }
+    ];
+    // Ride syncs from Strava; meals from food log. Filled = logged, ring = still to log.
+    var logs = [['Ride', true, '#FF4F1A'], ['Bkfst', true, '#111111'], ['Lunch', true, '#111111'], ['Snack', true, '#111111'], ['Dinner', false, '#111111']];
+    return {
+      macros: rows.map(function (r) {
+        return { name: r.name, color: r.color, left: Math.max(0, r.target - r.eaten),
+          pct: Math.min(100, Math.round(r.eaten / r.target * 100)) + '%' };
+      }),
+      logs: logs.map(function (l) {
+        return l[1]
+          ? { label: l[0], r: 19, fill: l[2], stroke: 'none', check: 1, text: '#111111' }
+          : { label: l[0], r: 18.4, fill: 'none', stroke: '#9A9893', check: 0, text: '#9A9893' };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
