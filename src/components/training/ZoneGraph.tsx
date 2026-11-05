@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
 import { ZONE_BLOCKS, ZONE_COLORS, ZONE_TICKS } from '@/data/sample';
-import { C, F, caps, T } from '@/theme';
+import { C, DT, F, caps, useLayout, T } from '@/theme';
 
 const W = 350;
 const H = 188;
@@ -23,6 +23,7 @@ const ease = (t: number) => {
  * sharing one Z1–Z5 bar. Ticks grow left to right.
  */
 export function ZoneGraph({ width, clock }: { width: number; clock: SharedValue<number> }) {
+  const { stackTiles } = useLayout();
   const k = width / W;
   const font = useFont(require('@expo-google-fonts/ibm-plex-mono/400Regular/IBMPlexMono_400Regular.ttf'), 11);
 
@@ -53,22 +54,22 @@ export function ZoneGraph({ width, clock }: { width: number; clock: SharedValue<
         </Group>
       </Canvas>
 
-      <View style={styles.blocks}>
+      <View style={[styles.blocks, stackTiles && { flexDirection: 'column' }]}>
         {ZONE_BLOCKS.map((b) => (
           <LinearGradient key={b.name} colors={b.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.block}>
-            <Text style={[caps, { color: b.ink }]}>{b.name}</Text>
-            <Text style={[styles.hours, { color: b.ink }]}>{b.hours}</Text>
+            <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: b.ink }]}>{b.name}</Text>
+            <Text maxFontSizeMultiplier={DT.fixed} style={[styles.hours, { color: b.ink }]}>{b.hours}</Text>
             {/* Zone range and HR time on their own lines, so all three tiles wrap the same at 11pt.
                 Full opacity: at 60% the text fell below 4.5:1 on the gradients. */}
             <View style={{ gap: 2 }}>
               {b.sub.split(' · ').map((part) => (
-                <Text key={part} style={[styles.sub, { color: b.ink }]}>{part}</Text>
+                <Text key={part} maxFontSizeMultiplier={DT.list} style={[styles.sub, { color: b.ink }]}>{part}</Text>
               ))}
             </View>
           </LinearGradient>
         ))}
       </View>
-      <Text style={[styles.sub, { color: C.grey, marginTop: -6 }]}>From your Strava rides · 4.6h coasting not drawn</Text>
+      <Text maxFontSizeMultiplier={DT.list} style={[styles.sub, { color: C.grey, marginTop: -6 }]}>From your Strava rides · 4.6h coasting not drawn</Text>
     </View>
   );
 }

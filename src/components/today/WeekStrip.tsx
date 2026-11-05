@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { C, F, T } from '@/theme';
+import { C, DT, F, T } from '@/theme';
 
 const LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -35,7 +35,7 @@ export function WeekStrip({ selected, onSelect }: { selected: number; onSelect?:
                 m === 'planned' && { borderWidth: 1.2, borderColor: C.line },
               ]}
             />
-            <Text style={[styles.letter, { color: filled ? C.white : m === 'fuelled' ? C.orangeText : C.grey }]}>{l}</Text>
+            <Text maxFontSizeMultiplier={DT.strip} style={[styles.letter, { color: filled ? C.white : m === 'fuelled' ? C.orangeText : C.grey }]}>{l}</Text>
           </Pressable>
         );
       })}
