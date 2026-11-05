@@ -19,7 +19,7 @@ import { C, DT, F, caps, useLayout, T } from '@/theme';
 
 /** "Bloom" food log: a circle grows out of the + button, then rows stagger in. */
 export function AddPanel() {
-  const { width, contentH } = useLayout();
+  const { width, contentH, headerTop } = useLayout();
   const { addOpen, setAddOpen, meal, setMeal, picked, togglePick, variant } = useApp();
   const open = useSharedValue(0);
 
@@ -66,7 +66,7 @@ export function AddPanel() {
         ]}
       />
       <GestureDetector gesture={dismiss}>
-      <Animated.View style={[styles.inner, sheet]}>
+      <Animated.View style={[styles.inner, { paddingTop: headerTop }, sheet]}>
         <Stagger i={0} addOpen={addOpen} open={open}>
           <View style={styles.grabber} accessibilityElementsHidden importantForAccessibility="no" />
           <View style={styles.titleRow}>

@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { C, DT, F, T } from '@/theme';
+import { C, DT, F, T, px } from '@/theme';
 
 const LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -43,10 +43,17 @@ export function WeekStrip({ selected, onSelect }: { selected: number; onSelect?:
   );
 }
 
+// Whole-pixel sizes, each circle placed explicitly at the cell's centre: the old 34.4/29/1.2pt
+// sizes rounded unevenly on 3x screens and left the selected ring ~0.5pt off centre.
+const CELL = 36;
+const SEL = 34;
+const MARK = 28;
+const ring = (d: number) => ({ position: 'absolute' as const, width: d, height: d, borderRadius: d / 2, top: (CELL - d) / 2, left: (CELL - d) / 2 });
+
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', justifyContent: 'space-between', height: 36, alignItems: 'center' },
-  cell: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  sel: { position: 'absolute', width: 34.4, height: 34.4, borderRadius: 17.2, borderWidth: 1.2, borderColor: C.ink },
-  mark: { position: 'absolute', width: 29, height: 29, borderRadius: 14.5 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', height: CELL, alignItems: 'center' },
+  cell: { width: CELL, height: CELL, alignItems: 'center', justifyContent: 'center' },
+  sel: { ...ring(SEL), borderWidth: px(1.25), borderColor: C.ink },
+  mark: ring(MARK),
   letter: { fontFamily: F.monoMedium, fontSize: T.label },
 });

@@ -1,4 +1,4 @@
-import { useWindowDimensions } from 'react-native';
+import { PixelRatio, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const C = {
@@ -38,8 +38,14 @@ export function useLayout() {
   const navH = 60 + Math.max(insets.bottom, 12);
   // Past ~1.35× text, rows of three tiles stack vertically instead of squeezing.
   const { fontScale } = useWindowDimensions();
-  return { s, width, height, navH, contentH: height - navH, insets, stackTiles: fontScale > 1.35 };
+  // Screen headers start a comfortable gap below the status bar (the design's 56 was tighter than
+  // the Dynamic Island's inset on current iPhones).
+  const headerTop = Math.round(Math.max(56 * s, insets.top + 14));
+  return { s, width, height, navH, contentH: height - navH, insets, headerTop, stackTiles: fontScale > 1.35 };
 }
+
+/** Round a size to whole device pixels so circles and rings stay centred on 2× and 3× screens. */
+export const px = (n: number) => PixelRatio.roundToNearestPixel(n);
 
 /** The type scale. Every font size in the app is one of these. */
 export const T = {
