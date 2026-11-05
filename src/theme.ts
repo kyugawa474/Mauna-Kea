@@ -39,4 +39,13 @@ export function useLayout() {
   return { s, width, height, navH, contentH: height - navH, insets };
 }
 
-export const caps = { fontFamily: F.mono, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase' } as const;
+/** The type scale. Every font size in the app is one of these. */
+export const T = {
+  label: 11, // mono caps labels, units, notes
+  body: 16, // names and short text
+  mid: 26, // secondary numbers, panel titles
+  head: 40, // screen titles, the fuel number at rest
+  display: 56, // the day's hero number
+} as const;
+
+export const caps = { fontFamily: F.mono, fontSize: T.label, letterSpacing: 1.2, textTransform: 'uppercase' } as const;

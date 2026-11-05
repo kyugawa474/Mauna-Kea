@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
 import { ZONE_BLOCKS, ZONE_COLORS, ZONE_TICKS } from '@/data/sample';
-import { C, F, caps } from '@/theme';
+import { C, F, caps, T } from '@/theme';
 
 const W = 350;
 const H = 188;
@@ -108,6 +108,6 @@ function ColorTicks({ color, list, dir, y, clock }: { color: string; list: { i: 
 const styles = StyleSheet.create({
   blocks: { flexDirection: 'row', gap: 3 },
   block: { flex: 1, paddingVertical: 12, paddingHorizontal: 10, gap: 10, },
-  hours: { fontFamily: F.light, fontSize: 26, letterSpacing: -0.8 },
-  sub: { fontFamily: F.mono, fontSize: 11 },
+  hours: { fontFamily: F.light, fontSize: T.mid, letterSpacing: -0.8 },
+  sub: { fontFamily: F.mono, fontSize: T.label },
 });

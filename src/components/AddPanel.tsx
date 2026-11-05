@@ -12,7 +12,7 @@ import Animated, {
 
 import { DAYS, RECENT_FOODS } from '@/data/sample';
 import { MEALS, useApp } from '@/state/AppState';
-import { C, F, caps, useLayout } from '@/theme';
+import { C, F, caps, useLayout, T } from '@/theme';
 
 /** "Bloom" food log: a circle grows out of the + button, then rows stagger in. */
 export function AddPanel() {
@@ -44,7 +44,7 @@ export function AddPanel() {
         <Stagger i={0} addOpen={addOpen} open={open}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>Log food</Text>
-            <Text style={[caps, { fontSize: 11, color: C.grey }]}>{DAYS[variant].label} · 3:10 PM</Text>
+            <Text style={[caps, { fontSize: T.label, color: C.grey }]}>{DAYS[variant].label} · 3:10 PM</Text>
           </View>
         </Stagger>
 
@@ -69,8 +69,8 @@ export function AddPanel() {
 
         <Stagger i={2} addOpen={addOpen} open={open}>
           <View style={styles.recentHead}>
-            <Text style={[caps, { fontSize: 11 }]}>Recent</Text>
-            <Text style={[caps, { fontSize: 11, color: C.grey }]}>
+            <Text style={[caps, { fontSize: T.label }]}>Recent</Text>
+            <Text style={[caps, { fontSize: T.label, color: C.grey }]}>
               {addedKcal ? `+${addedKcal} kcal to ${meal.toLowerCase()}` : ''}
             </Text>
           </View>
@@ -84,7 +84,7 @@ export function AddPanel() {
                 <View style={{ flex: 1, gap: 3 }}>
                   <Text numberOfLines={1} style={styles.food}>{f.name}</Text>
                   <Text style={styles.macros}>
-                    {f.kcal} kcal · P {f.p} · C {f.c} · F {f.f}
+                    {f.kcal} kcal · C {f.c} · P {f.p} · F {f.f}
                   </Text>
                 </View>
                 <Pressable
@@ -133,7 +133,7 @@ const Check = () => (
 const styles = StyleSheet.create({
   inner: { flex: 1, paddingTop: 56, paddingHorizontal: 20 },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  title: { fontFamily: F.light, fontSize: 28, letterSpacing: -0.5, color: C.ink },
+  title: { fontFamily: F.light, fontSize: T.mid, letterSpacing: -0.5, color: C.ink },
   meals: { marginTop: 20, flexDirection: 'row', borderWidth: 1, borderColor: C.ink },
   meal: { flex: 1, height: 40, alignItems: 'center', justifyContent: 'center' },
   mealDivider: { borderLeftWidth: 1, borderLeftColor: C.ink },
@@ -145,8 +145,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: -20, paddingHorizontal: 20,
     paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.line,
   },
-  food: { fontFamily: F.medium, fontSize: 14, color: C.ink },
-  macros: { fontFamily: F.mono, fontSize: 11, color: C.grey },
+  food: { fontFamily: F.medium, fontSize: T.body, color: C.ink },
+  macros: { fontFamily: F.mono, fontSize: T.label, color: C.grey },
   addBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center' },
   icon: { width: 16, height: 16, alignItems: 'center', justifyContent: 'center' },
 });

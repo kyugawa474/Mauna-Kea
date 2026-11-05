@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { C, F } from '@/theme';
+import { C, F, T } from '@/theme';
 
 const LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -48,5 +48,5 @@ const styles = StyleSheet.create({
   cell: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   sel: { position: 'absolute', width: 34.4, height: 34.4, borderRadius: 17.2, borderWidth: 1.2, borderColor: C.ink },
   mark: { position: 'absolute', width: 29, height: 29, borderRadius: 14.5 },
-  letter: { fontFamily: F.monoMedium, fontSize: 11 },
+  letter: { fontFamily: F.monoMedium, fontSize: T.label },
 });
