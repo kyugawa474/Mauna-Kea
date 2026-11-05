@@ -34,7 +34,7 @@ export default function TrainingScreen() {
         <Text style={styles.h1}>Training</Text>
       </View>
 
-      <Section title="Weekly kJ" right="— target" rightColor={C.orange}>
+      <Section title="Weekly kJ" right="— target" rightColor={C.orangeText}>
         <View style={styles.baseline}>
           <Text style={styles.big}>{fmt(kjWeek)}</Text>
           <Text style={styles.note}>/ {fmt(TRAINING_STATS.weekTarget)} kJ this week</Text>
@@ -64,7 +64,7 @@ export default function TrainingScreen() {
           <ActivityIcon kind={a.kind} />
           <View style={{ flex: 1, gap: 3 }}>
             <Text style={[caps, { color: C.grey }]}>{a.date}</Text>
-            <Text style={[styles.logName, a.kind === 'skipped' && { color: C.grey2 }]}>{a.name}</Text>
+            <Text style={[styles.logName, a.kind === 'skipped' && { color: C.grey }]}>{a.name}</Text>
             <Text style={styles.note}>{a.sub}</Text>
           </View>
           {'kj' in a && (
@@ -97,7 +97,7 @@ function Stat({ label, value, unit, hot }: { label: string; value: string; unit:
       <Text style={[caps, { color: hot ? C.ink : C.grey }]}>{label}</Text>
       <View style={[styles.baseline, { gap: 3 }]}>
         <Text style={styles.statNum}>{value}</Text>
-        <Text style={[styles.note, { fontSize: 10, color: hot ? C.ink : C.grey }]}>{unit}</Text>
+        <Text style={[styles.note, { color: hot ? C.ink : C.grey }]}>{unit}</Text>
       </View>
     </View>
   );
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   row3: { flexDirection: 'row', gap: 3 },
   stat: { flex: 1, paddingVertical: 12, paddingHorizontal: 10, gap: 14 },
   statNum: { fontFamily: F.light, fontSize: 26, letterSpacing: -0.8, color: C.ink },
-  rowLabel: { height: 27, lineHeight: 27, fontFamily: F.mono, fontSize: 10, color: C.grey2 },
+  rowLabel: { height: 27, lineHeight: 27, fontFamily: F.mono, fontSize: 11, color: C.grey },
   cellBox: { width: 27, height: 27, alignItems: 'center', justifyContent: 'center' },
   ring: { position: 'absolute' },
   legend: { flexDirection: 'row', alignItems: 'center', gap: 5 },

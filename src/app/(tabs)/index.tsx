@@ -61,6 +61,11 @@ export default function TodayScreen() {
     Haptics.selectionAsync();
   };
 
+  // Where the frost last settled (rest, pulled down or swiped up); VoiceOver reads it as the value.
+  // Declared before the gesture: its worklets capture these when they are created.
+  const [mode, setMode] = useState<number>(EDGE_REST);
+  const onSnap = (to: number) => setMode(to);
+
   const pan = usePanGesture({
     minDistance: 8,
     onActivate: (e) => {
@@ -81,7 +86,9 @@ export default function TodayScreen() {
     onDeactivate: (e) => {
       'worklet';
       if (axis.value === 1) {
-        edge.set(withSpring(snapEdge(edge.value, e.velocityY / s), { damping: 22, stiffness: 180, mass: 0.9 }));
+        const to = snapEdge(edge.value, e.velocityY / s);
+        edge.set(withSpring(to, { damping: 22, stiffness: 180, mass: 0.9 }));
+        scheduleOnRN(onSnap, to);
       } else if (axis.value === 2) {
         const dir = e.translationX + e.velocityX * 0.15 < -width * 0.25 ? 1 : e.translationX + e.velocityX * 0.15 > width * 0.25 ? -1 : 0;
         const ok = dir !== 0 && dayIndex + dir >= 0 && dayIndex + dir <= 6;
@@ -100,6 +107,18 @@ export default function TodayScreen() {
       axis.value = 0;
     },
   });
+
+  // ── VoiceOver: the frost is one adjustable element; swipe up shows fuel, swipe down shows power ──
+  const goTo = (to: number) => {
+    setMode(to);
+    if (to !== EDGE_REST) dismissHint();
+    edge.set(withSpring(to, { damping: 22, stiffness: 180, mass: 0.9 }));
+  };
+  const modeLabel = mode === EDGE_DOWN ? 'power rays shown' : mode === EDGE_UP ? 'macro rings shown' : 'at rest';
+  const a11ySummary =
+    `Ride ${fmt(day.kj)} kilojoules` +
+    (day.tgt > 0 ? ` of a ${fmt(day.tgt)} target` : ', rest day') +
+    `. Fuel ${fmt(totals.left)} kcal left of ${fmt(day.of)}.`;
 
   // ── macro grams animate when food is committed from the + panel ──
   const gC = useSharedValue(totals.gC);
@@ -148,7 +167,20 @@ export default function TodayScreen() {
     <GestureDetector gesture={pan}>
       <View style={[styles.screen, { height: contentH }]} collapsable={false}>
         {/* ───────────── base layer: the ride ───────────── */}
-        <Animated.View style={[StyleSheet.absoluteFill, page]} pointerEvents="none">
+        <Animated.View
+          style={[StyleSheet.absoluteFill, page]}
+          pointerEvents="none"
+          accessible
+          accessibilityRole="adjustable"
+          accessibilityLabel={a11ySummary}
+          accessibilityValue={{ text: modeLabel }}
+          accessibilityHint="Swipe up to show the macro rings, down to show the power rays."
+          accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+          onAccessibilityAction={(ev) => {
+            const up = ev.nativeEvent.actionName === 'increment';
+            goTo(up ? (mode === EDGE_DOWN ? EDGE_REST : EDGE_UP) : mode === EDGE_UP ? EDGE_REST : EDGE_DOWN);
+          }}
+        >
           <SunCanvas day={day} edge={edge} s={s} width={width} height={contentH} />
         </Animated.View>
 
@@ -195,14 +227,14 @@ export default function TodayScreen() {
             <Animated.View style={[at(133), styles.block, page]}>
               <Text style={caps}>Eat</Text>
               <View style={styles.baseline}>
-                <Text style={[styles.big, { color: live ? C.orange : C.ink }]}>{fmt(left)}</Text>
+                <Text style={[styles.big, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
                 <Text style={[styles.note, { color: C.frostInk }]}>kcal left of {fmt(day.of)}</Text>
-                {totals.addedKcal > 0 && <Text style={[styles.note, { color: C.orange, opacity: live ? 1 : 0 }]}>−{totals.addedKcal}</Text>}
+                {totals.addedKcal > 0 && <Text style={[styles.note, { color: C.orangeText, opacity: live ? 1 : 0 }]}>−{totals.addedKcal}</Text>}
               </View>
             </Animated.View>
 
             <Animated.View style={[at(586), styles.baseline, page, fuelOut]}>
-              <Text style={[styles.fuelBig, { color: live ? C.orange : C.ink }]}>{fmt(left)}</Text>
+              <Text style={[styles.fuelBig, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
               <Text style={[styles.note, { color: C.frostInk }]}>kcal left of {fmt(day.of)}</Text>
             </Animated.View>
 
@@ -225,7 +257,7 @@ export default function TodayScreen() {
 
         {dayIndex !== TODAY_INDEX && (
           <Pressable onPress={() => setDayIndex(TODAY_INDEX)} style={[styles.todayBtn, { top: 44 * s }]} hitSlop={8}>
-            <Text style={[caps, { fontSize: 11, color: C.orange }]}>Today</Text>
+            <Text style={[caps, { color: C.orangeText }]}>Today</Text>
           </Pressable>
         )}
       </View>
@@ -272,10 +304,10 @@ function Macro({ label, value, goal, bar, live }: { label: string; value: number
   return (
     <View style={[styles.cell, { borderTopColor: bar }]} accessibilityLabel={`${label} ${g} of ${goal} grams${over ? `, ${over} over` : ''}`}>
       <Text style={caps}>{label}</Text>
-      <Text style={[styles.mid, { color: live || over ? C.orange : C.ink }]}>
+      <Text style={[styles.mid, { color: live || over ? C.orangeText : C.ink }]}>
         {g}
         <Text style={[styles.unit, { color: C.frostInk }]}>/{goal}g</Text>
-        {over > 0 && <Text style={[styles.unit, { color: C.orange }]}> +{over}</Text>}
+        {over > 0 && <Text style={[styles.unit, { color: C.orangeText }]}> +{over}</Text>}
       </Text>
     </View>
   );
@@ -320,7 +352,7 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', gap: 16 },
   cell: { flex: 1, gap: 6, borderTopWidth: 3, paddingTop: 10 },
   mid: { fontFamily: F.light, fontSize: 26, letterSpacing: -0.5, color: C.ink },
-  unit: { fontFamily: F.mono, fontSize: 10, color: C.grey },
+  unit: { fontFamily: F.mono, fontSize: 11, color: C.grey },
   sep: { position: 'absolute', height: 1, backgroundColor: C.ink, zIndex: 6 },
   todayBtn: { position: 'absolute', right: 8, padding: 12, zIndex: 40 },
   fuelBig: { fontFamily: F.thin, fontSize: 40, letterSpacing: -1.4, lineHeight: 40, color: C.ink },

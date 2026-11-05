@@ -24,7 +24,7 @@ const ease = (t: number) => {
  */
 export function ZoneGraph({ width, clock }: { width: number; clock: SharedValue<number> }) {
   const k = width / W;
-  const font = useFont(require('@expo-google-fonts/ibm-plex-mono/400Regular/IBMPlexMono_400Regular.ttf'), 9);
+  const font = useFont(require('@expo-google-fonts/ibm-plex-mono/400Regular/IBMPlexMono_400Regular.ttf'), 11);
 
   return (
     <View style={{ gap: 14 }}>
@@ -58,11 +58,17 @@ export function ZoneGraph({ width, clock }: { width: number; clock: SharedValue<
           <LinearGradient key={b.name} colors={b.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.block}>
             <Text style={[caps, { color: b.ink }]}>{b.name}</Text>
             <Text style={[styles.hours, { color: b.ink }]}>{b.hours}</Text>
-            <Text style={[styles.sub, { color: b.ink, opacity: b.ink === C.white ? 0.65 : 0.6 }]}>{b.sub}</Text>
+            {/* Zone range and HR time on their own lines, so all three tiles wrap the same at 11pt.
+                Full opacity: at 60% the text fell below 4.5:1 on the gradients. */}
+            <View style={{ gap: 2 }}>
+              {b.sub.split(' · ').map((part) => (
+                <Text key={part} style={[styles.sub, { color: b.ink }]}>{part}</Text>
+              ))}
+            </View>
           </LinearGradient>
         ))}
       </View>
-      <Text style={[styles.sub, { color: C.grey2, marginTop: -6 }]}>From your Strava rides · 4.6h coasting not drawn</Text>
+      <Text style={[styles.sub, { color: C.grey, marginTop: -6 }]}>From your Strava rides · 4.6h coasting not drawn</Text>
     </View>
   );
 }
@@ -103,5 +109,5 @@ const styles = StyleSheet.create({
   blocks: { flexDirection: 'row', gap: 3 },
   block: { flex: 1, paddingVertical: 12, paddingHorizontal: 10, gap: 10, },
   hours: { fontFamily: F.light, fontSize: 26, letterSpacing: -0.8 },
-  sub: { fontFamily: F.mono, fontSize: 10 },
+  sub: { fontFamily: F.mono, fontSize: 11 },
 });

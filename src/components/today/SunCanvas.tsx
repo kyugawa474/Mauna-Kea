@@ -39,7 +39,7 @@ interface Props {
  */
 export function SunCanvas({ day, edge, s, width, height }: Props) {
   const r = sunRadius(day.kj);
-  const font = useFont(require('@expo-google-fonts/ibm-plex-mono/400Regular/IBMPlexMono_400Regular.ttf'), 8);
+  const font = useFont(require('@expo-google-fonts/ibm-plex-mono/400Regular/IBMPlexMono_400Regular.ttf'), 10.5);
 
   // Slow heat-haze on the disc.
   const t = useSharedValue(0);
@@ -128,5 +128,5 @@ function ZoneText({ z, font, edge }: { z: ZoneLabel; font: SkFont; edge: SharedV
     const end = 0.47 - 0.004 * (mid / 3.6) - 0.035;
     return ramp(progress(edge.value), end, end - 0.035) * 0.9;
   });
-  return <TextPath path={path} text={text} font={font} initialOffset={offset} color="#FFFFFF" opacity={opacity} />;
+  return <TextPath path={path} text={text} font={font} initialOffset={offset} color={C.ink} opacity={opacity} />;
 }
