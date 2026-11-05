@@ -17,6 +17,7 @@ import {
 import { useEffect } from 'react';
 import {
   Easing,
+  interpolateColor,
   useDerivedValue,
   useSharedValue,
   withRepeat,
@@ -53,6 +54,11 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, s, width
   const fy = useDerivedValue(() => 0.06 + 0.015 * t.value);
 
   const waterOpacity = useDerivedValue(() => 0.62 + 0.16 * ramp(progress(edge.value), 0.5, 0.62));
+  // The pool reflects the sun in orange at rest and when pulled down, and clears to white as the
+  // frost rises, finishing just before the macro rings start drawing (they need the white to read).
+  const waterColor = useDerivedValue(() =>
+    interpolateColor(ramp(progress(edge.value), 0.5, 0.56), [0, 1], [C.orange, '#FFFFFF']),
+  );
   const hl = useDerivedValue(() => Skia.XYWHRect(0, edge.value - 1, 390, 2));
   const glow = useDerivedValue(() => Skia.XYWHRect(0, edge.value + 1, 390, 26));
   const glowFrom = useDerivedValue(() => vec(0, edge.value + 1));
@@ -70,7 +76,7 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, s, width
           <FractalNoise freqX={1.15} freqY={1.15} octaves={3} seed={1} />
         </Rect>
 
-        <Circle cx={CX} cy={CY} r={waterR} color="#FFFFFF" opacity={waterOpacity}>
+        <Circle cx={CX} cy={CY} r={waterR} color={waterColor} opacity={waterOpacity}>
           <DisplacementMap channelX="r" channelY="g" scale={22}>
             <FractalNoise freqX={fx} freqY={fy} octaves={2} seed={3} />
           </DisplacementMap>
