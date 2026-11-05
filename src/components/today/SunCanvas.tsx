@@ -21,7 +21,7 @@ import {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import type { Day, ZoneLabel } from '@/data/sample';
+import { ZONE_STARTS, type Day, type ZoneLabel } from '@/data/sample';
 import { CX, CY, polar, progress, ramp, sunRadius } from '@/lib/frost';
 import { C } from '@/theme';
 
@@ -53,6 +53,7 @@ export function SunCanvas({ day, edge, s, width, height }: Props) {
   const clip = useDerivedValue(() => Skia.XYWHRect(0, 0, 390, Math.max(0, edge.value)));
 
   const groups = useMemo(() => groupRays(day.rays ?? []), [day.rays]);
+  const separators = useMemo(() => zoneSeparators(day.zoneLabels), [day.zoneLabels]);
 
   if (r === 0) return null;
 
@@ -70,6 +71,9 @@ export function SunCanvas({ day, edge, s, width, height }: Props) {
             <RayGroup key={g.color} color={g.color} ticks={g.ticks} r={r} edge={edge} />
           ))}
           {font && day.zoneLabels?.map((z) => <ZoneText key={z[0]} z={z} font={font} edge={edge} />)}
+          {separators.marks.map((m) => (
+            <ZoneSeparator key={m.index} index={m.index} deg={m.deg} lo={separators.lo} hi={separators.hi} edge={edge} />
+          ))}
         </Group>
       </Group>
     </Canvas>
@@ -105,6 +109,46 @@ function RayGroup({ color, ticks, r, edge }: { color: string; ticks: Tick[]; r: 
     return path.detach();
   });
   return <Path path={path} color={color} style="stroke" strokeWidth={2} />;
+}
+
+/**
+ * Where to draw a separator for each zone threshold (between ray `index - 1` and `index`), and the
+ * radial band the labels occupy. A separator sits at the true threshold unless that would cut into
+ * a label; then it moves to the middle of the gap between the two labels.
+ */
+function zoneSeparators(labels: ZoneLabel[] | undefined) {
+  if (!labels?.length) return { marks: [] as { index: number; deg: number }[], lo: 0, hi: 0 };
+  const arcs = labels.map(([, , a1, a2]) => [Math.min(a1, a2), Math.max(a1, a2)]).sort((a, b) => a[0] - b[0]);
+  const gaps = arcs.slice(1).map((arc, k) => [arcs[k][1], arc[0]]);
+  const marks = ZONE_STARTS.map((index) => {
+    const deg = (index - 0.5) * 3.6;
+    const gap = gaps.reduce((best, g) => {
+      const d = (x: number[]) => (deg < x[0] ? x[0] - deg : deg > x[1] ? deg - x[1] : 0);
+      return d(g) < d(best) ? g : best;
+    }, gaps[0]);
+    const inside = deg >= gap[0] + 1 && deg <= gap[1] - 1;
+    return { index, deg: inside ? deg : (gap[0] + gap[1]) / 2 };
+  });
+  // Labels read along their baseline at radius R, glyphs reaching ~7px inward or outward.
+  const radii = labels.map(([, R]) => R);
+  return { marks, lo: Math.min(...radii) - 3, hi: Math.max(...radii) + 2 };
+}
+
+/** A short radial tick across the label band. It fades in with the labels, after the rays under it draw. */
+function ZoneSeparator({ index, deg, lo, hi, edge }: { index: number; deg: number; lo: number; hi: number; edge: SharedValue<number> }) {
+  const path = useMemo(() => {
+    const a = polar(lo, deg);
+    const b = polar(hi, deg);
+    const p = Skia.PathBuilder.Make();
+    p.moveTo(a.x, a.y);
+    p.lineTo(b.x, b.y);
+    return p.detach();
+  }, [deg, lo, hi]);
+  const opacity = useDerivedValue(() => {
+    const end = 0.47 - 0.004 * index - 0.035;
+    return ramp(progress(edge.value), end, end - 0.035) * 0.55;
+  });
+  return <Path path={path} color={C.ink} style="stroke" strokeWidth={1.2} strokeCap="round" opacity={opacity} />;
 }
 
 function ZoneText({ z, font, edge }: { z: ZoneLabel; font: SkFont; edge: SharedValue<number> }) {
