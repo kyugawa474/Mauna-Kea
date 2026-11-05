@@ -52,8 +52,10 @@ export function SunCanvas({ day, edge, s, width, height }: Props) {
   // The sun is cut where the frost begins.
   const clip = useDerivedValue(() => Skia.XYWHRect(0, 0, 390, Math.max(0, edge.value)));
 
-  const groups = useMemo(() => groupRays(day.rays ?? []), [day.rays]);
-  const separators = useMemo(() => zoneSeparators(day.zoneLabels), [day.zoneLabels]);
+  const scale = useMemo(() => buildScale(day.rays ?? []), [day.rays]);
+  const groups = useMemo(() => groupTicks(scale.ticks), [scale]);
+  const labels = useMemo(() => (font ? zoneLabels(scale.n, day.zoneLabels, font) : []), [scale, day.zoneLabels, font]);
+  const separators = useMemo(() => zoneSeparators(scale.n, labels), [scale, labels]);
 
   if (r === 0) return null;
 
@@ -70,9 +72,9 @@ export function SunCanvas({ day, edge, s, width, height }: Props) {
           {groups.map((g) => (
             <RayGroup key={g.color} color={g.color} ticks={g.ticks} r={r} edge={edge} />
           ))}
-          {font && day.zoneLabels?.map((z) => <ZoneText key={z[0]} z={z} font={font} edge={edge} />)}
+          {font && labels.map((z) => <ZoneText key={z[0]} z={z} font={font} edge={edge} />)}
           {separators.marks.map((m) => (
-            <ZoneSeparator key={m.index} index={m.index} deg={m.deg} lo={separators.lo} hi={separators.hi} edge={edge} />
+            <ZoneSeparator key={m.deg} deg={m.deg} lo={separators.lo} hi={separators.hi} edge={edge} />
           ))}
         </Group>
       </Group>
@@ -80,29 +82,82 @@ export function SunCanvas({ day, edge, s, width, height }: Props) {
   );
 }
 
-type Tick = { i: number; L: number };
+type Tick = { deg: number; L: number; color: string };
 
-function groupRays(rays: [number, string][]) {
+const GREY = '#C4C2BC'; // zero-time ticks arrive pre-coloured grey at a floor length
+const Z5 = ZONE_STARTS[ZONE_STARTS.length - 1];
+/** Z5 rays are merged three at a time (12 W each) so its thin tail doesn't take a third of the sun. */
+const Z5_MERGE = 3;
+const ZONE_NAMES = ['RECOVERY', 'ENDURANCE', 'TEMPO', 'THRESHOLD', 'VO2+'];
+
+/**
+ * The sun's power scale. Z1–Z4 keep one ray per 4 W; Z5 merges every three 4 W rays into one 12 W
+ * ray whose length is their average time per 4 W, so ray length means the same thing everywhere and
+ * only the angle is compressed. Rays are spread evenly round the full circle.
+ */
+function buildScale(rays: [number, string][]) {
+  const merged: [number, string][] = rays.slice(0, Z5);
+  for (let i = Z5; i < rays.length; i += Z5_MERGE) {
+    const group = rays.slice(i, i + Z5_MERGE);
+    const live = group.filter(([, c]) => c !== GREY);
+    const avg = live.reduce((t, [L]) => t + L, 0) / group.length;
+    // Grey (no-time) steps count as zero; keep the data's 2.5px floor so a sliver of time stays visible.
+    merged.push(live.length ? [Math.max(avg, 2.5), live[0][1]] : [group[0][0], GREY]);
+  }
+  const n = merged.length;
+  const ticks: Tick[] = merged.map(([L, color], k) => ({ deg: (k * 360) / n, L, color }));
+  return { n, ticks };
+}
+
+/** Index of the first ray of each zone (Z1..Z5) on the merged scale. */
+const zoneStartsOn = () => [0, ...ZONE_STARTS];
+
+function groupTicks(ticks: Tick[]) {
   const map = new Map<string, Tick[]>();
-  // Colour encodes the power zone; zero-time ticks arrive pre-coloured grey (#C4C2BC).
-  rays.forEach(([L, color], i) => {
-    if (!map.has(color)) map.set(color, []);
-    map.get(color)!.push({ i, L });
+  for (const t of ticks) {
+    if (!map.has(t.color)) map.set(t.color, []);
+    map.get(t.color)!.push(t);
+  }
+  return [...map].map(([color, list]) => ({ color, ticks: list }));
+}
+
+/**
+ * Zone labels laid out from the zone thresholds on the merged scale. Labels on the lower half run
+ * anticlockwise so they read upright. Radii come from the day's data (one for each half); a label
+ * gets its full name when it fits the arc, otherwise just its zone number.
+ */
+function zoneLabels(n: number, dayLabels: ZoneLabel[] | undefined, font: SkFont): ZoneLabel[] {
+  if (!dayLabels?.length) return [];
+  const rTop = dayLabels.find((z) => z[4] === 1)?.[1] ?? dayLabels[0][1];
+  const rBottom = dayLabels.find((z) => z[4] === 0)?.[1] ?? rTop;
+  const step = 360 / n;
+  const starts = zoneStartsOn();
+  return starts.map((start, z) => {
+    const end = z + 1 < starts.length ? starts[z + 1] : n;
+    const a = start * step + 1.5;
+    const b = end * step - 1.5;
+    const mid = (a + b) / 2;
+    const bottom = mid > 90 && mid < 270;
+    const R = bottom ? rBottom : rTop;
+    const full = `Z${z + 1} ${ZONE_NAMES[z]}`;
+    // Same width ZoneText lays out (glyphs plus its letter spacing), with a little air at each end.
+    const fits = font.measureText(full).width + full.length * 0.8 + 6 <= ((b - a) * Math.PI * R) / 180;
+    const text = fits ? full : `Z${z + 1}`;
+    return bottom ? [text, R, b, a, 0] : [text, R, a, b, 1];
   });
-  return [...map].map(([color, ticks]) => ({ color, ticks }));
 }
 
 function RayGroup({ color, ticks, r, edge }: { color: string; ticks: Tick[]; r: number; edge: SharedValue<number> }) {
   const path = useDerivedValue(() => {
     const p = progress(edge.value);
     const path = Skia.PathBuilder.Make();
-    for (const { i, L } of ticks) {
-      // Tick i draws while progress falls through [end - 3.5%, end].
-      const end = 0.47 - 0.004 * i;
+    for (const { deg, L } of ticks) {
+      // Rays draw clockwise: each one while progress falls through [end - 3.5%, end].
+      const end = 0.47 - 0.004 * (deg / 3.6);
       const f = ramp(p, end, end - 0.035);
       if (f <= 0) continue;
-      const a = polar(r + 9, i * 3.6);
-      const b = polar(r + 9 + L * f, i * 3.6);
+      const a = polar(r + 9, deg);
+      const b = polar(r + 9 + L * f, deg);
       path.moveTo(a.x, a.y);
       path.lineTo(b.x, b.y);
     }
@@ -112,30 +167,19 @@ function RayGroup({ color, ticks, r, edge }: { color: string; ticks: Tick[]; r: 
 }
 
 /**
- * Where to draw a separator for each zone threshold (between ray `index - 1` and `index`), and the
- * radial band the labels occupy. A separator sits at the true threshold unless that would cut into
- * a label; then it moves to the middle of the gap between the two labels.
+ * Where to draw a separator for each zone threshold, and the radial band the labels occupy.
+ * The labels leave a gap at each threshold, so the separator sits exactly on it.
  */
-function zoneSeparators(labels: ZoneLabel[] | undefined) {
-  if (!labels?.length) return { marks: [] as { index: number; deg: number }[], lo: 0, hi: 0 };
-  const arcs = labels.map(([, , a1, a2]) => [Math.min(a1, a2), Math.max(a1, a2)]).sort((a, b) => a[0] - b[0]);
-  const gaps = arcs.slice(1).map((arc, k) => [arcs[k][1], arc[0]]);
-  const marks = ZONE_STARTS.map((index) => {
-    const deg = (index - 0.5) * 3.6;
-    const gap = gaps.reduce((best, g) => {
-      const d = (x: number[]) => (deg < x[0] ? x[0] - deg : deg > x[1] ? deg - x[1] : 0);
-      return d(g) < d(best) ? g : best;
-    }, gaps[0]);
-    const inside = deg >= gap[0] + 1 && deg <= gap[1] - 1;
-    return { index, deg: inside ? deg : (gap[0] + gap[1]) / 2 };
-  });
+function zoneSeparators(n: number, labels: ZoneLabel[]) {
+  if (!labels.length) return { marks: [] as { deg: number }[], lo: 0, hi: 0 };
+  const marks = ZONE_STARTS.map((index) => ({ deg: (index * 360) / n }));
   // Labels read along their baseline at radius R, glyphs reaching ~7px inward or outward.
   const radii = labels.map(([, R]) => R);
   return { marks, lo: Math.min(...radii) - 3, hi: Math.max(...radii) + 2 };
 }
 
 /** A short radial tick across the label band. It fades in with the labels, after the rays under it draw. */
-function ZoneSeparator({ index, deg, lo, hi, edge }: { index: number; deg: number; lo: number; hi: number; edge: SharedValue<number> }) {
+function ZoneSeparator({ deg, lo, hi, edge }: { deg: number; lo: number; hi: number; edge: SharedValue<number> }) {
   const path = useMemo(() => {
     const a = polar(lo, deg);
     const b = polar(hi, deg);
@@ -145,7 +189,7 @@ function ZoneSeparator({ index, deg, lo, hi, edge }: { index: number; deg: numbe
     return p.detach();
   }, [deg, lo, hi]);
   const opacity = useDerivedValue(() => {
-    const end = 0.47 - 0.004 * index - 0.035;
+    const end = 0.47 - 0.004 * (deg / 3.6) - 0.035;
     return ramp(progress(edge.value), end, end - 0.035) * 0.55;
   });
   return <Path path={path} color={C.ink} style="stroke" strokeWidth={1.2} strokeCap="round" opacity={opacity} />;
