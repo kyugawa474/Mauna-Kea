@@ -1,24 +1,49 @@
 import * as Haptics from 'expo-haptics';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withSpring,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { DAYS, RECENT_FOODS } from '@/data/sample';
 import { MEALS, useApp } from '@/state/AppState';
-import { C, F, caps, useLayout, T } from '@/theme';
+import { C, DT, F, caps, useLayout, T } from '@/theme';
 
 /** "Bloom" food log: a circle grows out of the + button, then rows stagger in. */
 export function AddPanel() {
   const { width, contentH } = useLayout();
-  const { addOpen, meal, setMeal, picked, togglePick, variant } = useApp();
+  const { addOpen, setAddOpen, meal, setMeal, picked, togglePick, variant } = useApp();
   const open = useSharedValue(0);
+
+  // Swipe down to dismiss, like an iOS sheet. Closing commits what was ticked (same as tapping ✕).
+  const drag = useSharedValue(0);
+  const close = () => setAddOpen(false);
+  const dismiss = usePanGesture({
+    activeOffsetY: [-1000, 12],
+    failOffsetX: [-24, 24],
+    onUpdate: (e) => {
+      'worklet';
+      drag.set(Math.max(0, e.translationY));
+    },
+    onDeactivate: (e) => {
+      'worklet';
+      if (e.translationY > 120 || e.velocityY > 900) {
+        scheduleOnRN(close);
+        drag.set(withTiming(0, { duration: 450 }));
+      } else {
+        drag.set(withSpring(0, { damping: 20, stiffness: 220 }));
+      }
+    },
+  });
+  const sheet = useAnimatedStyle(() => ({ transform: [{ translateY: drag.value }] }));
 
   useEffect(() => {
     open.value = withTiming(addOpen ? 1 : 0, {
@@ -40,11 +65,13 @@ export function AddPanel() {
           circle,
         ]}
       />
-      <View style={styles.inner}>
+      <GestureDetector gesture={dismiss}>
+      <Animated.View style={[styles.inner, sheet]}>
         <Stagger i={0} addOpen={addOpen} open={open}>
+          <View style={styles.grabber} accessibilityElementsHidden importantForAccessibility="no" />
           <View style={styles.titleRow}>
-            <Text style={styles.title}>Log food</Text>
-            <Text style={[caps, { fontSize: T.label, color: C.grey }]}>{DAYS[variant].label} · 3:10 PM</Text>
+            <Text maxFontSizeMultiplier={DT.fixed} style={styles.title} accessibilityRole="header">Log food</Text>
+            <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey }]}>{DAYS[variant].label} · 3:10 PM</Text>
           </View>
         </Stagger>
 
@@ -60,7 +87,7 @@ export function AddPanel() {
                   accessibilityState={{ selected: on }}
                   style={[styles.meal, i > 0 && styles.mealDivider, on && { backgroundColor: C.ink }]}
                 >
-                  <Text style={[caps, { letterSpacing: 0.8, color: on ? C.white : C.ink }]}>{m}</Text>
+                  <Text maxFontSizeMultiplier={DT.strip} numberOfLines={1} adjustsFontSizeToFit style={[caps, { letterSpacing: 0.8, color: on ? C.white : C.ink }]}>{m}</Text>
                 </Pressable>
               );
             })}
@@ -69,8 +96,8 @@ export function AddPanel() {
 
         <Stagger i={2} addOpen={addOpen} open={open}>
           <View style={styles.recentHead}>
-            <Text style={[caps, { fontSize: T.label }]}>Recent</Text>
-            <Text style={[caps, { fontSize: T.label, color: C.grey }]}>
+            <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label }]}>Recent</Text>
+            <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey, flexShrink: 1, textAlign: 'right' }]}>
               {addedKcal ? `+${addedKcal} kcal to ${meal.toLowerCase()}` : ''}
             </Text>
           </View>
@@ -82,8 +109,8 @@ export function AddPanel() {
             <Stagger key={f.name} i={i + 3} addOpen={addOpen} open={open}>
               <View style={styles.row}>
                 <View style={{ flex: 1, gap: 3 }}>
-                  <Text numberOfLines={1} style={styles.food}>{f.name}</Text>
-                  <Text style={styles.macros}>
+                  <Text maxFontSizeMultiplier={DT.list} numberOfLines={2} style={styles.food}>{f.name}</Text>
+                  <Text maxFontSizeMultiplier={DT.list} style={styles.macros}>
                     {f.kcal} kcal · C {f.c} · P {f.p} · F {f.f}
                   </Text>
                 </View>
@@ -94,6 +121,7 @@ export function AddPanel() {
                   }}
                   accessibilityRole="button"
                   accessibilityLabel={(on ? 'Remove ' : 'Add ') + f.name}
+                  hitSlop={4}
                   style={[styles.addBtn, on && { backgroundColor: C.orange }]}
                 >
                   {on ? <Check /> : <Plus />}
@@ -102,7 +130,8 @@ export function AddPanel() {
             </Stagger>
           );
         })}
-      </View>
+      </Animated.View>
+      </GestureDetector>
     </View>
   );
 }
@@ -132,7 +161,8 @@ const Check = () => (
 
 const styles = StyleSheet.create({
   inner: { flex: 1, paddingTop: 56, paddingHorizontal: 20 },
-  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: C.grey2, marginTop: -4, marginBottom: 14 },
+  titleRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, justifyContent: 'space-between', alignItems: 'baseline' },
   title: { fontFamily: F.light, fontSize: T.mid, letterSpacing: -0.5, color: C.ink },
   meals: { marginTop: 20, flexDirection: 'row', borderWidth: 1, borderColor: C.ink },
   meal: { flex: 1, height: 40, alignItems: 'center', justifyContent: 'center' },

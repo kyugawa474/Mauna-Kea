@@ -7,10 +7,10 @@ import { WeeklyBars } from '@/components/training/WeeklyBars';
 import { ZoneGraph } from '@/components/training/ZoneGraph';
 import { ACTIVITY_LOG, CONSISTENCY, TRAINING_STATS } from '@/data/sample';
 import { fmt, useCountUp } from '@/lib/useTween';
-import { C, F, caps, useLayout, T } from '@/theme';
+import { C, DT, F, caps, useLayout, T } from '@/theme';
 
 export default function TrainingScreen() {
-  const { width } = useLayout();
+  const { width, stackTiles } = useLayout();
   const inner = width - 40;
 
   // One clock drives every entrance animation; it restarts each time the tab gains focus.
@@ -30,17 +30,17 @@ export default function TrainingScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
       <View style={{ gap: 6, paddingBottom: 24 }}>
-        <Text style={[caps, { fontSize: T.label, color: C.grey }]}>Thu · Oct 22</Text>
-        <Text style={styles.h1}>Training</Text>
+        <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey }]}>Thu · Oct 22</Text>
+        <Text maxFontSizeMultiplier={DT.fixed} style={styles.h1}>Training</Text>
       </View>
 
       <Section title="Weekly kJ" right="— target" rightColor={C.orangeText}>
         <View style={styles.baseline}>
-          <Text style={styles.big}>{fmt(kjWeek)}</Text>
-          <Text style={styles.note}>/ {fmt(TRAINING_STATS.weekTarget)} kJ this week</Text>
+          <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{fmt(kjWeek)}</Text>
+          <Text maxFontSizeMultiplier={DT.list} style={[styles.note, { flexShrink: 1 }]}>/ {fmt(TRAINING_STATS.weekTarget)} kJ this week</Text>
         </View>
         <WeeklyBars width={width} clock={clock} />
-        <View style={[styles.row3, { marginTop: 14 }]}>
+        <View style={[styles.row3, stackTiles && styles.stacked, { marginTop: 14 }]}>
           <Stat label="Variability" value={String(TRAINING_STATS.variability)} unit="%" />
           <Stat label="Avg / week" value={fmt(kjAvg)} unit="kJ" />
           <Stat label="To go" value={fmt(Math.max(0, TRAINING_STATS.weekTarget - kjWeek))} unit="kJ" hot />
@@ -56,21 +56,21 @@ export default function TrainingScreen() {
       </Section>
 
       <View style={[styles.logHead]}>
-        <Text style={caps}>Activity</Text>
-        <Text style={[caps, { color: C.grey }]}>This week</Text>
+        <Text maxFontSizeMultiplier={DT.list} style={caps}>Activity</Text>
+        <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: C.grey }]}>This week</Text>
       </View>
       {ACTIVITY_LOG.map((a) => (
         <View key={a.date} style={styles.logRow}>
           <ActivityIcon kind={a.kind} />
           <View style={{ flex: 1, gap: 3 }}>
-            <Text style={[caps, { color: C.grey }]}>{a.date}</Text>
-            <Text style={[styles.logName, a.kind === 'skipped' && { color: C.grey }]}>{a.name}</Text>
-            <Text style={styles.note}>{a.sub}</Text>
+            <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: C.grey }]}>{a.date}</Text>
+            <Text maxFontSizeMultiplier={DT.list} style={[styles.logName, a.kind === 'skipped' && { color: C.grey }]}>{a.name}</Text>
+            <Text maxFontSizeMultiplier={DT.list} style={styles.note}>{a.sub}</Text>
           </View>
           {'kj' in a && (
-            <Text style={styles.logKj}>
+            <Text maxFontSizeMultiplier={DT.list} style={styles.logKj}>
               {fmt(a.kj)}
-              <Text style={styles.note}> kJ</Text>
+              <Text maxFontSizeMultiplier={DT.list} style={styles.note}> kJ</Text>
             </Text>
           )}
         </View>
@@ -83,8 +83,8 @@ function Section({ title, right, rightColor = C.grey, children }: { title: strin
   return (
     <View style={styles.section}>
       <View style={styles.sectionHead}>
-        <Text style={caps}>{title}</Text>
-        <Text style={[caps, { color: rightColor }]}>{right}</Text>
+        <Text maxFontSizeMultiplier={DT.list} style={caps}>{title}</Text>
+        <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: rightColor }]}>{right}</Text>
       </View>
       {children}
     </View>
@@ -94,10 +94,10 @@ function Section({ title, right, rightColor = C.grey, children }: { title: strin
 function Stat({ label, value, unit, hot }: { label: string; value: string; unit: string; hot?: boolean }) {
   return (
     <View style={[styles.stat, { backgroundColor: hot ? C.orange : C.tile }]}>
-      <Text style={[caps, { color: hot ? C.ink : C.grey }]}>{label}</Text>
+      <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: hot ? C.ink : C.grey }]}>{label}</Text>
       <View style={[styles.baseline, { gap: 3 }]}>
-        <Text style={styles.statNum}>{value}</Text>
-        <Text style={[styles.note, { color: hot ? C.ink : C.grey }]}>{unit}</Text>
+        <Text maxFontSizeMultiplier={DT.fixed} style={styles.statNum}>{value}</Text>
+        <Text maxFontSizeMultiplier={DT.list} style={[styles.note, { color: hot ? C.ink : C.grey }]}>{unit}</Text>
       </View>
     </View>
   );
@@ -111,7 +111,7 @@ function Consistency({ clock, width }: { clock: SharedValue<number>; width: numb
       <View style={{ flexDirection: 'row', gap: 4 }} accessibilityLabel="Rides and other sessions over the last 12 weeks; this week in orange">
         <View style={{ width: 14, gap: 4 }}>
           {ROW_LABELS.map((l, i) => (
-            <Text key={i} style={styles.rowLabel}>{l}</Text>
+            <Text key={i} maxFontSizeMultiplier={DT.strip} style={styles.rowLabel}>{l}</Text>
           ))}
         </View>
         <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -126,18 +126,18 @@ function Consistency({ clock, width }: { clock: SharedValue<number>; width: numb
           ))}
         </View>
       </View>
-      <View style={{ flexDirection: 'row', gap: 16 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 8 }}>
         <View style={styles.legend}>
           <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: C.ink }} />
-          <Text style={styles.note}>Ride</Text>
+          <Text maxFontSizeMultiplier={DT.list} style={styles.note}>Ride</Text>
         </View>
         <View style={styles.legend}>
           <View style={{ width: 11, height: 11, borderRadius: 6, borderWidth: 1.5, borderColor: C.ink }} />
-          <Text style={styles.note}>Other activity</Text>
+          <Text maxFontSizeMultiplier={DT.list} style={styles.note}>Other activity</Text>
         </View>
         <View style={styles.legend}>
           <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: C.orange }} />
-          <Text style={styles.note}>This week</Text>
+          <Text maxFontSizeMultiplier={DT.list} style={styles.note}>This week</Text>
         </View>
       </View>
     </View>
@@ -191,11 +191,12 @@ const styles = StyleSheet.create({
     marginHorizontal: -20, paddingHorizontal: 20, borderTopWidth: 1, borderTopColor: C.ink,
     paddingTop: 14, paddingBottom: 26, gap: 12,
   },
-  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  baseline: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  sectionHead: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, justifyContent: 'space-between', alignItems: 'baseline' },
+  baseline: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 },
   big: { fontFamily: F.thin, fontSize: T.display, letterSpacing: -2.2, lineHeight: 56, color: C.ink },
   note: { fontFamily: F.mono, fontSize: T.label, color: C.grey },
   row3: { flexDirection: 'row', gap: 3 },
+  stacked: { flexDirection: 'column' },
   stat: { flex: 1, paddingVertical: 12, paddingHorizontal: 10, gap: 14 },
   statNum: { fontFamily: F.light, fontSize: T.mid, letterSpacing: -0.8, color: C.ink },
   rowLabel: { height: 27, lineHeight: 27, fontFamily: F.mono, fontSize: T.label, color: C.grey },

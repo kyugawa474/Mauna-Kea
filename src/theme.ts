@@ -36,7 +36,9 @@ export function useLayout() {
   const insets = useSafeAreaInsets();
   const s = width / DESIGN_W;
   const navH = 60 + Math.max(insets.bottom, 12);
-  return { s, width, height, navH, contentH: height - navH, insets };
+  // Past ~1.35× text, rows of three tiles stack vertically instead of squeezing.
+  const { fontScale } = useWindowDimensions();
+  return { s, width, height, navH, contentH: height - navH, insets, stackTiles: fontScale > 1.35 };
 }
 
 /** The type scale. Every font size in the app is one of these. */
@@ -47,5 +49,12 @@ export const T = {
   head: 40, // screen titles, the fuel number at rest
   display: 56, // the day's hero number
 } as const;
+
+/**
+ * Dynamic Type caps (maxFontSizeMultiplier). Text always scales with the user's setting;
+ * fixed compositions (Today's sun and frost, the week strip, the tab bar) cap it so the
+ * layout holds, while lists (Training, the food log) scale much further.
+ */
+export const DT = { fixed: 1.3, strip: 1.2, list: 2 } as const;
 
 export const caps = { fontFamily: F.mono, fontSize: T.label, letterSpacing: 1.2, textTransform: 'uppercase' } as const;

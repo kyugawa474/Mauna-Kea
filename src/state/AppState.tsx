@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 import { DAYS, RECENT_FOODS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
@@ -47,9 +48,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const setAddOpen = useCallback(
     (open: boolean) => {
       setAddOpenRaw(open);
-      if (!open) setCommitted((c) => ({ ...c, [variant]: { ...(picks[variant] ?? {}) } }));
+      if (!open) {
+        const ticked = picks[variant] ?? {};
+        const before = committed[variant] ?? {};
+        // Confirm with a success haptic when closing actually logs something new.
+        if (Object.keys(ticked).some((k) => ticked[+k] && !before[+k])) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        setCommitted((c) => ({ ...c, [variant]: { ...ticked } }));
+      }
     },
-    [picks, variant],
+    [picks, committed, variant],
   );
 
   const togglePick = useCallback(

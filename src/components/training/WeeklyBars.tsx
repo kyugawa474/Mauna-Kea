@@ -4,7 +4,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
 import { WEEKS, type Week } from '@/data/sample';
-import { C, F, T } from '@/theme';
+import { C, DT, F, T } from '@/theme';
 
 const CHART_H = 150;
 const PAD = 1.5;
@@ -48,6 +48,9 @@ export function WeeklyBars({ width, clock }: { width: number; clock: SharedValue
         <View style={{ flexDirection: 'row', marginTop: 8 }}>
           {WEEKS.map((w) => (
             <Text
+              maxFontSizeMultiplier={DT.strip}
+              numberOfLines={1}
+              adjustsFontSizeToFit
               key={w.label}
               style={{
                 width: col, textAlign: 'center', fontFamily: F.mono, fontSize: T.label,

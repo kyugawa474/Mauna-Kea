@@ -6,7 +6,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 
 import { TODAY_INDEX } from '@/data/sample';
 import { useApp } from '@/state/AppState';
-import { C, caps, useLayout } from '@/theme';
+import { C, DT, caps, useLayout } from '@/theme';
 
 export function NavBar({ state, navigateToTab }: BottomTabBarProps) {
   const { navH, insets } = useLayout();
@@ -33,7 +33,7 @@ export function NavBar({ state, navigateToTab }: BottomTabBarProps) {
     <View style={[styles.bar, { height: navH, paddingBottom: insets.bottom }]}>
       <Pressable style={styles.tab} onPress={() => go('index')} accessibilityRole="button" accessibilityLabel="Today">
         <View style={[styles.todayIcon, { backgroundColor: onToday ? C.ink : 'transparent', borderColor: onToday ? C.ink : C.grey }]} />
-        <Text style={[caps, { color: onToday ? C.ink : C.grey }]}>Today</Text>
+        <Text maxFontSizeMultiplier={DT.strip} style={[caps, { color: onToday ? C.ink : C.grey }]}>Today</Text>
       </Pressable>
 
       <Pressable
@@ -53,7 +53,7 @@ export function NavBar({ state, navigateToTab }: BottomTabBarProps) {
 
       <Pressable style={styles.tab} onPress={() => go('training')} accessibilityRole="button" accessibilityLabel="Training">
         <DotGrid filled={!onToday} />
-        <Text style={[caps, { color: !onToday ? C.ink : C.grey }]}>Training</Text>
+        <Text maxFontSizeMultiplier={DT.strip} style={[caps, { color: !onToday ? C.ink : C.grey }]}>Training</Text>
       </Pressable>
     </View>
   );

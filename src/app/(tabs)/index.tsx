@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
@@ -21,7 +21,11 @@ import { DAYS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
 import { CX, CY, EDGE_DOWN, EDGE_REST, EDGE_UP, progress, ramp, snapEdge, sunRadius, waterRadius } from '@/lib/frost';
 import { fmt, useTween } from '@/lib/useTween';
 import { useApp } from '@/state/AppState';
-import { C, F, caps, useLayout, T } from '@/theme';
+import { C, DT, F, caps, useLayout, T } from '@/theme';
+
+/** The tap region sits between the ride/eat headline and the bottom metrics (design px). */
+const TAP_TOP = 250;
+const TAP_BOTTOM = 640;
 
 /** The gesture hint shows until the first vertical drag (per app session; nothing is persisted yet). */
 let hintDismissed = false;
@@ -64,7 +68,13 @@ export default function TodayScreen() {
   // Where the frost last settled (rest, pulled down or swiped up); VoiceOver reads it as the value.
   // Declared before the gesture: its worklets capture these when they are created.
   const [mode, setMode] = useState<number>(EDGE_REST);
-  const onSnap = (to: number) => setMode(to);
+  const modeRef = useRef<number>(EDGE_REST);
+  const onSnap = (to: number) => {
+    // A light tap when the frost settles into a new position.
+    if (to !== modeRef.current) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    modeRef.current = to;
+    setMode(to);
+  };
 
   const pan = usePanGesture({
     minDistance: 8,
@@ -110,7 +120,7 @@ export default function TodayScreen() {
 
   // ── VoiceOver: the frost is one adjustable element; swipe up shows fuel, swipe down shows power ──
   const goTo = (to: number) => {
-    setMode(to);
+    onSnap(to);
     if (to !== EDGE_REST) dismissHint();
     edge.set(withSpring(to, { damping: 22, stiffness: 180, mass: 0.9 }));
   };
@@ -191,9 +201,9 @@ export default function TodayScreen() {
         </Animated.View>
 
         <Animated.View style={[at(133), styles.block, page, rideOut]}>
-          <Text style={caps}>Ride</Text>
+          <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Ride</Text>
           <BigNumber value={fmt(day.kj)} note={day.note} />
-          {day.kj > 0 && <Text style={styles.note}>≈ {fmt(day.kj)} kcal burned · 1 kJ of work ≈ 1 kcal</Text>}
+          {day.kj > 0 && <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={styles.note}>≈ {fmt(day.kj)} kcal burned · 1 kJ of work ≈ 1 kcal</Text>}
         </Animated.View>
 
         {day.ride && (
@@ -226,17 +236,17 @@ export default function TodayScreen() {
             </View>
 
             <Animated.View style={[at(133), styles.block, page]}>
-              <Text style={caps}>Eat</Text>
+              <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Eat</Text>
               <View style={styles.baseline}>
-                <Text style={[styles.big, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
-                <Text style={[styles.note, { color: C.frostInk }]}>kcal left of {fmt(day.of)}</Text>
-                {totals.addedKcal > 0 && <Text style={[styles.note, { color: C.orangeText, opacity: live ? 1 : 0 }]}>−{totals.addedKcal}</Text>}
+                <Text maxFontSizeMultiplier={DT.fixed} style={[styles.big, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
+                <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={[styles.note, styles.shrink, { color: C.frostInk }]}>kcal left of {fmt(day.of)}</Text>
+                {totals.addedKcal > 0 && <Text maxFontSizeMultiplier={DT.fixed} style={[styles.note, { color: C.orangeText, opacity: live ? 1 : 0 }]}>−{totals.addedKcal}</Text>}
               </View>
             </Animated.View>
 
             <Animated.View style={[at(586), styles.baseline, page, fuelOut]}>
-              <Text style={[styles.fuelBig, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
-              <Text style={[styles.note, { color: C.frostInk }]}>kcal left of {fmt(day.of)}</Text>
+              <Text maxFontSizeMultiplier={DT.fixed} style={[styles.fuelBig, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
+              <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={[styles.note, styles.shrink, { color: C.frostInk }]}>kcal left of {fmt(day.of)}</Text>
             </Animated.View>
 
             <Animated.View style={[at(654), styles.grid, page]}>
@@ -247,9 +257,23 @@ export default function TodayScreen() {
           </Animated.View>
         </Animated.View>
 
+        {/* Tap alternative to the drag (HIG: never gesture-only). At rest, tap above the waterline for
+            the power rays and below it for the macro rings; tap again to return. VoiceOver uses the
+            adjustable element on the sun instead, so this region is hidden from it. */}
+        <Pressable
+          accessible={false}
+          importantForAccessibility="no-hide-descendants"
+          style={{ position: 'absolute', left: 0, right: 0, top: TAP_TOP * s, height: (TAP_BOTTOM - TAP_TOP) * s, zIndex: 5 }}
+          onPress={(ev) => {
+            const y = TAP_TOP + ev.nativeEvent.locationY / s;
+            if (mode !== EDGE_REST) goTo(EDGE_REST);
+            else goTo(y < EDGE_REST ? EDGE_DOWN : EDGE_UP);
+          }}
+        />
+
         {showHint && (
           <Animated.View pointerEvents="none" style={[styles.hint, hintStyle]}>
-            <Text style={styles.hintText}>↓ Pull for power · Swipe for fuel ↑</Text>
+            <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={styles.hintText}>↓ Pull for power · Swipe for fuel ↑</Text>
           </Animated.View>
         )}
 
@@ -258,7 +282,7 @@ export default function TodayScreen() {
 
         {dayIndex !== TODAY_INDEX && (
           <Pressable onPress={() => setDayIndex(TODAY_INDEX)} style={[styles.todayBtn, { top: 44 * s }]} hitSlop={8}>
-            <Text style={[caps, { color: C.orangeText }]}>Today</Text>
+            <Text maxFontSizeMultiplier={DT.fixed} style={[caps, { color: C.orangeText }]}>Today</Text>
           </Pressable>
         )}
       </View>
@@ -270,7 +294,7 @@ function Header({ label, selected, onSelect, onLongPress }: { label: string; sel
   return (
     <View style={{ gap: 6 }}>
       <Pressable onLongPress={onLongPress} delayLongPress={500} style={{ alignSelf: 'flex-start' }}>
-        <Text style={[caps, { fontSize: T.label, color: C.grey }]}>{label}</Text>
+        <Text maxFontSizeMultiplier={DT.fixed} style={[caps, { fontSize: T.label, color: C.grey }]}>{label}</Text>
       </Pressable>
       <WeekStrip selected={selected} onSelect={onSelect} />
     </View>
@@ -280,8 +304,8 @@ function Header({ label, selected, onSelect, onLongPress }: { label: string; sel
 function BigNumber({ value, note }: { value: string; note: string }) {
   return (
     <View style={styles.baseline}>
-      <Text style={styles.big}>{value}</Text>
-      <Text style={styles.note}>{note}</Text>
+      <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{value}</Text>
+      <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={[styles.note, styles.shrink]}>{note}</Text>
     </View>
   );
 }
@@ -289,12 +313,12 @@ function BigNumber({ value, note }: { value: string; note: string }) {
 function Metric({ label, value, unit, sub, bar }: { label: string; value: number; unit: string; sub: string; bar: string }) {
   return (
     <View style={[styles.cell, { borderTopColor: bar }]}>
-      <Text style={caps}>{label}</Text>
-      <Text style={styles.mid}>
+      <Text maxFontSizeMultiplier={DT.fixed} style={caps}>{label}</Text>
+      <Text maxFontSizeMultiplier={DT.fixed} style={styles.mid}>
         {value}
-        <Text style={styles.unit}>{unit}</Text>
+        <Text maxFontSizeMultiplier={DT.fixed} style={styles.unit}>{unit}</Text>
       </Text>
-      <Text style={styles.unit}>{sub}</Text>
+      <Text maxFontSizeMultiplier={DT.fixed} style={styles.unit}>{sub}</Text>
     </View>
   );
 }
@@ -304,11 +328,11 @@ function Macro({ label, value, goal, bar, live }: { label: string; value: number
   const over = goal > 0 && g > goal ? g - goal : 0;
   return (
     <View style={[styles.cell, { borderTopColor: bar }]} accessibilityLabel={`${label} ${g} of ${goal} grams${over ? `, ${over} over` : ''}`}>
-      <Text style={caps}>{label}</Text>
-      <Text style={[styles.mid, { color: live || over ? C.orangeText : C.ink }]}>
+      <Text maxFontSizeMultiplier={DT.fixed} style={caps}>{label}</Text>
+      <Text maxFontSizeMultiplier={DT.fixed} style={[styles.mid, { color: live || over ? C.orangeText : C.ink }]}>
         {g}
-        <Text style={[styles.unit, { color: C.frostInk }]}>/{goal}g</Text>
-        {over > 0 && <Text style={[styles.unit, { color: C.orangeText }]}> +{over}</Text>}
+        <Text maxFontSizeMultiplier={DT.fixed} style={[styles.unit, { color: C.frostInk }]}>/{goal}g</Text>
+        {over > 0 && <Text maxFontSizeMultiplier={DT.fixed} style={[styles.unit, { color: C.orangeText }]}> +{over}</Text>}
       </Text>
     </View>
   );
@@ -333,10 +357,10 @@ function Tomorrow({ day, s, page }: { day: (typeof DAYS)[DayVariant]; s: number;
         }}
       />
       <View style={{ position: 'absolute', left: 0, right: 0, top: (CY - r * 0.62) * s, alignItems: 'center', gap: 6 }}>
-        <Text style={[caps, { color: C.grey }]}>Tomorrow · {day.label.split(' · ')[0]}</Text>
-        <Text style={styles.mid}>
+        <Text maxFontSizeMultiplier={DT.fixed} style={[caps, { color: C.grey }]}>Tomorrow · {day.label.split(' · ')[0]}</Text>
+        <Text maxFontSizeMultiplier={DT.fixed} style={styles.mid}>
           {fmt(day.tgt)}
-          <Text style={styles.unit}> kJ planned</Text>
+          <Text maxFontSizeMultiplier={DT.fixed} style={styles.unit}> kJ planned</Text>
         </Text>
       </View>
     </Animated.View>
@@ -357,6 +381,7 @@ const styles = StyleSheet.create({
   sep: { position: 'absolute', height: 1, backgroundColor: C.ink, zIndex: 6 },
   todayBtn: { position: 'absolute', right: 8, padding: 12, zIndex: 40 },
   fuelBig: { fontFamily: F.thin, fontSize: T.head, letterSpacing: -1.4, lineHeight: 40, color: C.ink },
-  hint: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 7 },
+  shrink: { flexShrink: 1 },
+  hint: { position: 'absolute', paddingHorizontal: 20, left: 0, right: 0, alignItems: 'center', zIndex: 7 },
   hintText: { fontFamily: F.mono, fontSize: T.label, letterSpacing: 1, textTransform: 'uppercase', color: C.frostInk },
 });
