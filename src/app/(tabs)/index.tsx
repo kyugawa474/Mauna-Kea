@@ -21,7 +21,7 @@ import { DAYS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
 import { CX, CY, EDGE_DOWN, EDGE_REST, EDGE_UP, progress, ramp, snapEdge, sunRadius, waterRadius } from '@/lib/frost';
 import { fmt, useTween } from '@/lib/useTween';
 import { useApp } from '@/state/AppState';
-import { C, F, caps, useLayout } from '@/theme';
+import { C, F, caps, useLayout, T } from '@/theme';
 
 /** The gesture hint shows until the first vertical drag (per app session; nothing is persisted yet). */
 let hintDismissed = false;
@@ -193,6 +193,7 @@ export default function TodayScreen() {
         <Animated.View style={[at(133), styles.block, page, rideOut]}>
           <Text style={caps}>Ride</Text>
           <BigNumber value={fmt(day.kj)} note={day.note} />
+          {day.kj > 0 && <Text style={styles.note}>≈ {fmt(day.kj)} kcal burned · 1 kJ of work ≈ 1 kcal</Text>}
         </Animated.View>
 
         {day.ride && (
@@ -239,9 +240,9 @@ export default function TodayScreen() {
             </Animated.View>
 
             <Animated.View style={[at(654), styles.grid, page]}>
-              <Macro label="Fat" value={sF} goal={day.TF} bar={C.peach} live={live} />
-              <Macro label="Protein" value={sP} goal={day.TP} bar={C.orange} live={live} />
               <Macro label="Carbs" value={sC} goal={day.TC} bar={C.ink} live={live} />
+              <Macro label="Protein" value={sP} goal={day.TP} bar={C.orange} live={live} />
+              <Macro label="Fat" value={sF} goal={day.TF} bar={C.peach} live={live} />
             </Animated.View>
           </Animated.View>
         </Animated.View>
@@ -269,7 +270,7 @@ function Header({ label, selected, onSelect, onLongPress }: { label: string; sel
   return (
     <View style={{ gap: 6 }}>
       <Pressable onLongPress={onLongPress} delayLongPress={500} style={{ alignSelf: 'flex-start' }}>
-        <Text style={[caps, { fontSize: 11, color: C.grey }]}>{label}</Text>
+        <Text style={[caps, { fontSize: T.label, color: C.grey }]}>{label}</Text>
       </Pressable>
       <WeekStrip selected={selected} onSelect={onSelect} />
     </View>
@@ -347,15 +348,15 @@ const styles = StyleSheet.create({
   filmBox: { position: 'absolute', left: 0, right: 0, bottom: 0, overflow: 'hidden' },
   block: { gap: 8, paddingTop: 12 },
   baseline: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  big: { fontFamily: F.thin, fontSize: 56, letterSpacing: -2.2, lineHeight: 56, color: C.ink },
-  note: { fontFamily: F.mono, fontSize: 11, color: C.grey },
+  big: { fontFamily: F.thin, fontSize: T.display, letterSpacing: -2.2, lineHeight: 56, color: C.ink },
+  note: { fontFamily: F.mono, fontSize: T.label, color: C.grey },
   grid: { flexDirection: 'row', gap: 16 },
   cell: { flex: 1, gap: 6, borderTopWidth: 3, paddingTop: 10 },
-  mid: { fontFamily: F.light, fontSize: 26, letterSpacing: -0.5, color: C.ink },
-  unit: { fontFamily: F.mono, fontSize: 11, color: C.grey },
+  mid: { fontFamily: F.light, fontSize: T.mid, letterSpacing: -0.5, color: C.ink },
+  unit: { fontFamily: F.mono, fontSize: T.label, color: C.grey },
   sep: { position: 'absolute', height: 1, backgroundColor: C.ink, zIndex: 6 },
   todayBtn: { position: 'absolute', right: 8, padding: 12, zIndex: 40 },
-  fuelBig: { fontFamily: F.thin, fontSize: 40, letterSpacing: -1.4, lineHeight: 40, color: C.ink },
+  fuelBig: { fontFamily: F.thin, fontSize: T.head, letterSpacing: -1.4, lineHeight: 40, color: C.ink },
   hint: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 7 },
-  hintText: { fontFamily: F.mono, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: C.frostInk },
+  hintText: { fontFamily: F.mono, fontSize: T.label, letterSpacing: 1, textTransform: 'uppercase', color: C.frostInk },
 });
