@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useReducedMotion } from 'react-native-reanimated';
 
 /**
  * Counts a number up/down to `target` (ease-out cubic). When `key` changes the value
@@ -9,9 +10,16 @@ export function useTween(target: number, key: string, { duration = 1100, delay =
   const from = useRef(target);
   const lastKey = useRef(key);
   const raf = useRef<number | null>(null);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (raf.current) cancelAnimationFrame(raf.current);
+    if (reduceMotion) {
+      // Shown as-is (see the return below); just keep the refs in step.
+      lastKey.current = key;
+      from.current = target;
+      return;
+    }
     if (lastKey.current !== key) {
       lastKey.current = key;
       from.current = target;
@@ -32,15 +40,18 @@ export function useTween(target: number, key: string, { duration = 1100, delay =
     return () => {
       if (raf.current) cancelAnimationFrame(raf.current);
     };
-  }, [target, key, duration, delay]);
+  }, [target, key, duration, delay, reduceMotion]);
 
-  return shown;
+  // With Reduce Motion on, numbers don't count; they just show their value.
+  return reduceMotion ? target : shown;
 }
 
 /** Counts from 0 to `target` each time `run` changes (e.g. on every tab focus). */
 export function useCountUp(target: number, run: number, { duration = 1200, delay = 150 } = {}) {
+  const reduceMotion = useReducedMotion();
   const [shown, setShown] = useState(0);
   useEffect(() => {
+    if (reduceMotion) return;
     let raf = 0;
     const start = Date.now() + delay;
     const step = () => {
@@ -50,8 +61,8 @@ export function useCountUp(target: number, run: number, { duration = 1200, delay
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [target, run, duration, delay]);
-  return shown;
+  }, [target, run, duration, delay, reduceMotion]);
+  return reduceMotion ? target : shown;
 }
 
 export const fmt = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');

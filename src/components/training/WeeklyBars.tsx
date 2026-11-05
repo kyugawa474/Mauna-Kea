@@ -50,8 +50,8 @@ export function WeeklyBars({ width, clock }: { width: number; clock: SharedValue
             <Text
               key={w.label}
               style={{
-                width: col, textAlign: 'center', fontFamily: F.mono, fontSize: 10,
-                color: w.kind === 'current' ? C.ink : w.kind === 'plan' ? C.grey2 : C.grey,
+                width: col, textAlign: 'center', fontFamily: F.mono, fontSize: 11,
+                color: w.kind === 'current' ? C.ink : C.grey,
               }}
             >
               {w.label}

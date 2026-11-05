@@ -4,13 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export const C = {
   bg: '#E5E4E0',
   ink: '#111111',
-  grey: '#66655F',
-  grey2: '#9A9893',
+  grey: '#5E5D57', // ≥4.5:1 on bg, frost and tiles
+  grey2: '#807E79', // outlines only (dashed/planned), ≥3:1 on bg; never text
   line: '#CFCEC9',
   tile: '#DAD9D4',
-  orange: '#FF4F1A',
-  peach: '#FFB59D',
-  tickOff: '#A3A19B',
+  orange: '#FF4F1A', // fills only
+  orangeText: '#AD3712', // orange for text: ≥4.5:1 on bg and frost
+  peach: '#D06C49', // fat; ≥3:1 on the water pool where the rings sit
+  tickOff: '#8D8B85', // empty ring ticks; ≥3:1 on the water pool
   frost: '#CDDEE0', // rgba(172,214,224,.42) over bg
   frostInk: '#4E5E63',
   white: '#FFFFFF',
@@ -38,4 +39,4 @@ export function useLayout() {
   return { s, width, height, navH, contentH: height - navH, insets };
 }
 
-export const caps = { fontFamily: F.mono, fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase' } as const;
+export const caps = { fontFamily: F.mono, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase' } as const;
