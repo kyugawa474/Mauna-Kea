@@ -98,10 +98,11 @@ const N = 60;
 
 /** 60 ticks = 100% of the day's goal, clockwise from 12 o'clock, pointing inward. */
 function Ring({ value, goal, r, color, edge }: { value: SharedValue<number>; goal: number; r: number; color: string; edge: SharedValue<number> }) {
-  const build = (eaten: boolean) => {
+  // `edge.value` and `value.value` must be read in the useDerivedValue worklets themselves:
+  // Reanimated only subscribes to shared values referenced there, not inside helpers they call.
+  const build = (p: number, grams: number, eaten: boolean) => {
     'worklet';
-    const p = progress(edge.value);
-    const on = Math.round(N * Math.min(1, goal > 0 ? value.value / goal : 0));
+    const on = Math.round(N * Math.min(1, goal > 0 ? grams / goal : 0));
     const path = Skia.PathBuilder.Make();
     for (let i = 0; i < N; i++) {
       if (eaten !== i < on) continue;
@@ -117,8 +118,8 @@ function Ring({ value, goal, r, color, edge }: { value: SharedValue<number>; goa
     }
     return path.detach();
   };
-  const eaten = useDerivedValue(() => build(true));
-  const left = useDerivedValue(() => build(false));
+  const eaten = useDerivedValue(() => build(progress(edge.value), value.value, true));
+  const left = useDerivedValue(() => build(progress(edge.value), value.value, false));
   return (
     <Group>
       <Path path={left} color={C.tickOff} style="stroke" strokeWidth={1} />

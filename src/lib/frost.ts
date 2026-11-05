@@ -30,11 +30,16 @@ export function ramp(p: number, a: number, b: number) {
   return t < 0 ? 0 : t > 1 ? 1 : t;
 }
 
-/** Point on a circle, angle in degrees clockwise from 12 o'clock. */
-export function polar(r: number, deg: number, cx = CX, cy = CY) {
+/**
+ * Point on a circle around (CX, CY), angle in degrees clockwise from 12 o'clock.
+ * CX/CY must be referenced in the body, not as parameter defaults: the worklets
+ * compiler doesn't capture identifiers in default values, so on the UI thread
+ * they'd be undefined and the throw aborts the app.
+ */
+export function polar(r: number, deg: number) {
   'worklet';
   const a = ((deg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) };
 }
 
 /** Sun radius: area-true, 1,300 kJ fills a 175px radius. */

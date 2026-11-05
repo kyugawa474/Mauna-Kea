@@ -80,12 +80,14 @@ function Bar({ w, i, x, colW, clock }: { w: Week; i: number; x: number; colW: nu
   const grow = useDerivedValue(() => easeOut((clock.value - (150 + i * 55)) / 800));
   const tgtIn = useDerivedValue(() => easeOut((clock.value - (650 + i * 55)) / 450));
 
-  const clipFor = (h: number) => {
+  // Read `grow.value` in each useDerivedValue worklet itself: Reanimated only subscribes
+  // to shared values referenced there, not inside helpers they call.
+  const clipFor = (h: number, g: number) => {
     'worklet';
-    return Skia.XYWHRect(bx, CHART_H - h * grow.value, bw, h * grow.value);
+    return Skia.XYWHRect(bx, CHART_H - h * g, bw, h * g);
   };
-  const mainClip = useDerivedValue(() => clipFor(w.kind === 'current' ? (w.plan ?? w.h) : w.h));
-  const doneRect = useDerivedValue(() => clipFor(w.h));
+  const mainClip = useDerivedValue(() => clipFor(w.kind === 'current' ? (w.plan ?? w.h) : w.h, grow.value));
+  const doneRect = useDerivedValue(() => clipFor(w.h, grow.value));
   const tgtRect = useDerivedValue(() => Skia.XYWHRect(bx, CHART_H - w.tgt - 1, bw * tgtIn.value, 2));
 
   const stripe =
