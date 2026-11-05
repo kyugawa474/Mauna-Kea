@@ -10,7 +10,7 @@ import { fmt, useCountUp } from '@/lib/useTween';
 import { C, DT, F, caps, useLayout, T } from '@/theme';
 
 export default function TrainingScreen() {
-  const { width, stackTiles } = useLayout();
+  const { width, stackTiles, headerTop } = useLayout();
   const inner = width - 40;
 
   // One clock drives every entrance animation; it restarts each time the tab gains focus.
@@ -28,7 +28,7 @@ export default function TrainingScreen() {
   const kjAvg = useCountUp(TRAINING_STATS.avgWeek, visit);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
+    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={[styles.page, { paddingTop: headerTop }]} showsVerticalScrollIndicator={false}>
       <View style={{ gap: 6, paddingBottom: 24 }}>
         <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey }]}>Thu · Oct 22</Text>
         <Text maxFontSizeMultiplier={DT.fixed} style={styles.h1}>Training</Text>

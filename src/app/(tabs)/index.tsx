@@ -31,7 +31,7 @@ const TAP_BOTTOM = 640;
 let hintDismissed = false;
 
 export default function TodayScreen() {
-  const { s, width, contentH } = useLayout();
+  const { s, width, contentH, headerTop } = useLayout();
   const { dayIndex, setDayIndex, variant, cycleThuPhase, totals } = useApp();
   const day = DAYS[variant];
 
@@ -172,6 +172,9 @@ export default function TodayScreen() {
   const tomorrow = restDay && dayIndex < 6 ? DAYS[(dayIndex + 1 === 3 ? 'thu_start' : WEEK[dayIndex + 1]) as DayVariant] : null;
 
   const at = (y: number) => ({ position: 'absolute' as const, left: 20 * s, right: 20 * s, top: y * s });
+  // The header block moves down as one piece so it clears the status bar; the sun and frost stay put.
+  const dy = headerTop - 56 * s;
+  const atHead = (y: number) => ({ ...at(y), top: y * s + dy });
 
   return (
     <GestureDetector gesture={pan}>
@@ -196,11 +199,11 @@ export default function TodayScreen() {
 
         {tomorrow && tomorrow.tgt > 0 && <Tomorrow day={tomorrow} s={s} page={page} />}
 
-        <Animated.View style={[at(56), hdrOut]}>
+        <Animated.View style={[atHead(56), hdrOut]}>
           <Header label={day.label} selected={dayIndex} onSelect={setDayIndex} onLongPress={dayIndex === 3 ? cycleThuPhase : undefined} />
         </Animated.View>
 
-        <Animated.View style={[at(133), styles.block, page, rideOut]}>
+        <Animated.View style={[atHead(133), styles.block, page, rideOut]}>
           <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Ride</Text>
           <BigNumber value={fmt(day.kj)} note={day.note} />
           {day.kj > 0 && <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={styles.note}>≈ {fmt(day.kj)} kcal burned · 1 kJ of work ≈ 1 kcal</Text>}
@@ -231,11 +234,11 @@ export default function TodayScreen() {
               />
             </Animated.View>
 
-            <View style={at(56)}>
+            <View style={atHead(56)}>
               <Header label={day.label} selected={dayIndex} onSelect={setDayIndex} onLongPress={dayIndex === 3 ? cycleThuPhase : undefined} />
             </View>
 
-            <Animated.View style={[at(133), styles.block, page]}>
+            <Animated.View style={[atHead(133), styles.block, page]}>
               <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Eat</Text>
               <View style={styles.baseline}>
                 <Text maxFontSizeMultiplier={DT.fixed} style={[styles.big, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
@@ -278,10 +281,10 @@ export default function TodayScreen() {
         )}
 
         {/* fixed separator under the week strip */}
-        <View pointerEvents="none" style={[styles.sep, { top: 133 * s, left: 20 * s, right: 20 * s }]} />
+        <View pointerEvents="none" style={[styles.sep, { top: 133 * s + dy, left: 20 * s, right: 20 * s }]} />
 
         {dayIndex !== TODAY_INDEX && (
-          <Pressable onPress={() => setDayIndex(TODAY_INDEX)} style={[styles.todayBtn, { top: 44 * s }]} hitSlop={8}>
+          <Pressable onPress={() => setDayIndex(TODAY_INDEX)} style={[styles.todayBtn, { top: 44 * s + dy }]} hitSlop={8}>
             <Text maxFontSizeMultiplier={DT.fixed} style={[caps, { color: C.orangeText }]}>Today</Text>
           </Pressable>
         )}
