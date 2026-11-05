@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
@@ -7,6 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withSequence,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
@@ -16,11 +17,14 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { FrostCanvas } from '@/components/today/FrostCanvas';
 import { SunCanvas } from '@/components/today/SunCanvas';
 import { WeekStrip } from '@/components/today/WeekStrip';
-import { DAYS, TODAY_INDEX } from '@/data/sample';
-import { EDGE_DOWN, EDGE_REST, EDGE_UP, progress, ramp, snapEdge, waterRadius } from '@/lib/frost';
+import { DAYS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
+import { CX, CY, EDGE_DOWN, EDGE_REST, EDGE_UP, progress, ramp, snapEdge, sunRadius, waterRadius } from '@/lib/frost';
 import { fmt, useTween } from '@/lib/useTween';
 import { useApp } from '@/state/AppState';
 import { C, F, caps, useLayout } from '@/theme';
+
+/** The gesture hint shows until the first vertical drag (per app session; nothing is persisted yet). */
+let hintDismissed = false;
 
 export default function TodayScreen() {
   const { s, width, contentH } = useLayout();
@@ -33,6 +37,25 @@ export default function TodayScreen() {
   const dx = useSharedValue(0);
   const axis = useSharedValue<0 | 1 | 2>(0); // 0 undecided, 1 vertical, 2 horizontal
 
+  // ── gesture hint: a caption on the waterline, plus one small dip of the frost on first view ──
+  const [showHint, setShowHint] = useState(!hintDismissed);
+  const dismissHint = () => {
+    hintDismissed = true;
+    setShowHint(false);
+  };
+  useEffect(() => {
+    if (hintDismissed) return;
+    edge.set(
+      withDelay(
+        900,
+        withSequence(
+          withTiming(EDGE_REST + 34, { duration: 420, easing: Easing.out(Easing.cubic) }),
+          withSpring(EDGE_REST, { damping: 14, stiffness: 160 }),
+        ),
+      ),
+    );
+  }, [edge]);
+
   const changeDay = (dir: number) => {
     setDayIndex(dayIndex + dir);
     Haptics.selectionAsync();
@@ -44,11 +67,12 @@ export default function TodayScreen() {
       'worklet';
       axis.value = Math.abs(e.translationX) > Math.abs(e.translationY) ? 2 : 1;
       start.value = edge.value;
+      if (axis.value === 1) scheduleOnRN(dismissHint);
     },
     onUpdate: (e) => {
       'worklet';
       if (axis.value === 1) {
-        edge.value = Math.max(EDGE_UP, Math.min(EDGE_DOWN, start.value + e.translationY / s));
+        edge.set(Math.max(EDGE_UP, Math.min(EDGE_DOWN, start.value + e.translationY / s)));
       } else if (axis.value === 2) {
         const atEnd = (e.translationX > 0 && dayIndex === 0) || (e.translationX < 0 && dayIndex === 6);
         dx.value = atEnd ? e.translationX * 0.25 : e.translationX;
@@ -57,7 +81,7 @@ export default function TodayScreen() {
     onDeactivate: (e) => {
       'worklet';
       if (axis.value === 1) {
-        edge.value = withSpring(snapEdge(edge.value, e.velocityY / s), { damping: 22, stiffness: 180, mass: 0.9 });
+        edge.set(withSpring(snapEdge(edge.value, e.velocityY / s), { damping: 22, stiffness: 180, mass: 0.9 }));
       } else if (axis.value === 2) {
         const dir = e.translationX + e.velocityX * 0.15 < -width * 0.25 ? 1 : e.translationX + e.velocityX * 0.15 > width * 0.25 ? -1 : 0;
         const ok = dir !== 0 && dayIndex + dir >= 0 && dayIndex + dir <= 6;
@@ -107,6 +131,16 @@ export default function TodayScreen() {
   const rideOut = useAnimatedStyle(() => ({ opacity: 1 - ramp(progress(edge.value), 0.5, 0.85) }));
   const hdrOut = useAnimatedStyle(() => ({ opacity: 1 - ramp(progress(edge.value), 0.8, 0.96) }));
   const metricsOut = useAnimatedStyle(() => ({ opacity: 1 - ramp(progress(edge.value), 0, 0.3) }));
+  // The rest-state fuel line hands over to the "Eat" headline as the frost rises.
+  const fuelOut = useAnimatedStyle(() => ({ opacity: 1 - ramp(progress(edge.value), 0.55, 0.72) }));
+  // The hint rides the waterline and fades as soon as the frost leaves rest.
+  const hintStyle = useAnimatedStyle(() => ({
+    top: (edge.value + 14) * s,
+    opacity: 1 - Math.min(1, Math.abs(edge.value - EDGE_REST) / 60),
+  }));
+
+  const restDay = day.kj === 0 && day.tgt === 0;
+  const tomorrow = restDay && dayIndex < 6 ? DAYS[(dayIndex + 1 === 3 ? 'thu_start' : WEEK[dayIndex + 1]) as DayVariant] : null;
 
   const at = (y: number) => ({ position: 'absolute' as const, left: 20 * s, right: 20 * s, top: y * s });
 
@@ -117,6 +151,8 @@ export default function TodayScreen() {
         <Animated.View style={[StyleSheet.absoluteFill, page]} pointerEvents="none">
           <SunCanvas day={day} edge={edge} s={s} width={width} height={contentH} />
         </Animated.View>
+
+        {tomorrow && tomorrow.tgt > 0 && <Tomorrow day={tomorrow} s={s} page={page} />}
 
         <Animated.View style={[at(56), hdrOut]}>
           <Header label={day.label} selected={dayIndex} onSelect={setDayIndex} onLongPress={dayIndex === 3 ? cycleThuPhase : undefined} />
@@ -165,6 +201,11 @@ export default function TodayScreen() {
               </View>
             </Animated.View>
 
+            <Animated.View style={[at(586), styles.baseline, page, fuelOut]}>
+              <Text style={[styles.fuelBig, { color: live ? C.orange : C.ink }]}>{fmt(left)}</Text>
+              <Text style={[styles.note, { color: C.frostInk }]}>kcal left of {fmt(day.of)}</Text>
+            </Animated.View>
+
             <Animated.View style={[at(654), styles.grid, page]}>
               <Macro label="Fat" value={sF} goal={day.TF} bar={C.peach} live={live} />
               <Macro label="Protein" value={sP} goal={day.TP} bar={C.orange} live={live} />
@@ -172,6 +213,12 @@ export default function TodayScreen() {
             </Animated.View>
           </Animated.View>
         </Animated.View>
+
+        {showHint && (
+          <Animated.View pointerEvents="none" style={[styles.hint, hintStyle]}>
+            <Text style={styles.hintText}>↓ Pull for power · Swipe for fuel ↑</Text>
+          </Animated.View>
+        )}
 
         {/* fixed separator under the week strip */}
         <View pointerEvents="none" style={[styles.sep, { top: 133 * s, left: 20 * s, right: 20 * s }]} />
@@ -220,14 +267,46 @@ function Metric({ label, value, unit, sub, bar }: { label: string; value: number
 }
 
 function Macro({ label, value, goal, bar, live }: { label: string; value: number; goal: number; bar: string; live: boolean }) {
+  const g = Math.round(value);
+  const over = goal > 0 && g > goal ? g - goal : 0;
   return (
-    <View style={[styles.cell, { borderTopColor: bar }]}>
+    <View style={[styles.cell, { borderTopColor: bar }]} accessibilityLabel={`${label} ${g} of ${goal} grams${over ? `, ${over} over` : ''}`}>
       <Text style={caps}>{label}</Text>
-      <Text style={[styles.mid, { color: live ? C.orange : C.ink }]}>
-        {Math.round(value)}
+      <Text style={[styles.mid, { color: live || over ? C.orange : C.ink }]}>
+        {g}
         <Text style={[styles.unit, { color: C.frostInk }]}>/{goal}g</Text>
+        {over > 0 && <Text style={[styles.unit, { color: C.orange }]}> +{over}</Text>}
       </Text>
     </View>
+  );
+}
+
+/** Rest day: a dashed ghost of tomorrow's sun, sized to tomorrow's kJ target. */
+function Tomorrow({ day, s, page }: { day: (typeof DAYS)[DayVariant]; s: number; page: ReturnType<typeof useAnimatedStyle> }) {
+  const r = sunRadius(day.tgt);
+  return (
+    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, page]}>
+      <View
+        style={{
+          position: 'absolute',
+          left: (CX - r) * s,
+          top: (CY - r) * s,
+          width: r * 2 * s,
+          height: r * 2 * s,
+          borderRadius: r * s,
+          borderWidth: 1.2,
+          borderStyle: 'dashed',
+          borderColor: C.grey2,
+        }}
+      />
+      <View style={{ position: 'absolute', left: 0, right: 0, top: (CY - r * 0.62) * s, alignItems: 'center', gap: 6 }}>
+        <Text style={[caps, { color: C.grey }]}>Tomorrow · {day.label.split(' · ')[0]}</Text>
+        <Text style={styles.mid}>
+          {fmt(day.tgt)}
+          <Text style={styles.unit}> kJ planned</Text>
+        </Text>
+      </View>
+    </Animated.View>
   );
 }
 
@@ -244,4 +323,7 @@ const styles = StyleSheet.create({
   unit: { fontFamily: F.mono, fontSize: 10, color: C.grey },
   sep: { position: 'absolute', height: 1, backgroundColor: C.ink, zIndex: 6 },
   todayBtn: { position: 'absolute', right: 8, padding: 12, zIndex: 40 },
+  fuelBig: { fontFamily: F.thin, fontSize: 40, letterSpacing: -1.4, lineHeight: 40, color: C.ink },
+  hint: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 7 },
+  hintText: { fontFamily: F.mono, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: C.frostInk },
 });
