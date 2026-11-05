@@ -9,7 +9,10 @@ import {
   Path,
   Rect,
   Skia,
+  Text,
+  useFont,
   vec,
+  type SkFont,
 } from '@shopify/react-native-skia';
 import { useEffect } from 'react';
 import {
@@ -56,6 +59,7 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, s, width
   const glowTo = useDerivedValue(() => vec(0, edge.value + 27));
 
   const h = height / s;
+  const font = useFont(require('@expo-google-fonts/ibm-plex-mono/500Medium/IBMPlexMono_500Medium.ttf'), 11);
 
   return (
     <Canvas style={{ position: 'absolute', left: 0, top: 0, width, height }} pointerEvents="none">
@@ -86,18 +90,42 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, s, width
           <LinearGradient start={glowFrom} end={glowTo} colors={['#FFFFFF47', '#FFFFFF00']} />
         </Rect>
 
-        <Ring value={carbs} goal={goals.C} r={104} color={C.ink} edge={edge} />
-        <Ring value={protein} goal={goals.P} r={82} color={C.orange} edge={edge} />
-        <Ring value={fat} goal={goals.F} r={60} color={C.peach} edge={edge} />
+        <Ring label="Carbs" value={carbs} goal={goals.C} r={RING_R[0]} color={C.ink} edge={edge} font={font} />
+        <Ring label="Protein" value={protein} goal={goals.P} r={RING_R[1]} color={C.orange} edge={edge} font={font} />
+        <Ring label="Fat" value={fat} goal={goals.F} r={RING_R[2]} color={C.peach} edge={edge} font={font} />
       </Group>
     </Canvas>
   );
 }
 
 const N = 60;
+/** Outer radius of each ring (design px), outside in: carbs, protein, fat. */
+const RING_R = [142, 114, 86];
+/** Rings sweep three quarters of a turn, 12 o'clock clockwise to 9; the open quarter holds the labels. */
+const SWEEP = 270;
+const TICK = { eaten: 19, left: 6 };
 
-/** 60 ticks = 100% of the day's goal, clockwise from 12 o'clock, pointing inward. */
-function Ring({ value, goal, r, color, edge }: { value: SharedValue<number>; goal: number; r: number; color: string; edge: SharedValue<number> }) {
+/**
+ * 60 ticks = 100% of the day's goal, clockwise from 12 o'clock over a 3/4 turn, pointing inward.
+ * The label sits in the open quarter, right-aligned just left of 12 o'clock on the ring's track.
+ */
+function Ring({
+  label,
+  value,
+  goal,
+  r,
+  color,
+  edge,
+  font,
+}: {
+  label: string;
+  value: SharedValue<number>;
+  goal: number;
+  r: number;
+  color: string;
+  edge: SharedValue<number>;
+  font: SkFont | null;
+}) {
   // `edge.value` and `value.value` must be read in the useDerivedValue worklets themselves:
   // Reanimated only subscribes to shared values referenced there, not inside helpers they call.
   const build = (p: number, grams: number, eaten: boolean) => {
@@ -109,8 +137,8 @@ function Ring({ value, goal, r, color, edge }: { value: SharedValue<number>; goa
       const a0 = 0.53 + (0.3 * i) / N;
       const f = ramp(p, a0, a0 + 0.1);
       if (f <= 0) continue;
-      const L = (eaten ? 15 : 5) * f;
-      const deg = (i + 0.5) * 6;
+      const L = (eaten ? TICK.eaten : TICK.left) * f;
+      const deg = ((i + 0.5) * SWEEP) / N;
       const a = polar(r, deg);
       const b = polar(r - L, deg);
       path.moveTo(a.x, a.y);
@@ -120,10 +148,19 @@ function Ring({ value, goal, r, color, edge }: { value: SharedValue<number>; goa
   };
   const eaten = useDerivedValue(() => build(progress(edge.value), value.value, true));
   const left = useDerivedValue(() => build(progress(edge.value), value.value, false));
+  // The label fades in as its ring starts to draw.
+  const labelOpacity = useDerivedValue(() => ramp(progress(edge.value), 0.53, 0.6));
+  const text = label.toUpperCase();
+  const textW = font ? font.measureText(text).width : 0;
   return (
     <Group>
-      <Path path={left} color={C.tickOff} style="stroke" strokeWidth={1} />
-      <Path path={eaten} color={color} style="stroke" strokeWidth={1.7} />
+      <Path path={left} color={C.tickOff} style="stroke" strokeWidth={1.2} />
+      <Path path={eaten} color={color} style="stroke" strokeWidth={2.2} />
+      {font && (
+        <Group opacity={labelOpacity}>
+          <Text x={CX - 8 - textW} y={CY - r + TICK.eaten / 2 + 4} text={text} font={font} color={C.ink} />
+        </Group>
+      )}
     </Group>
   );
 }
