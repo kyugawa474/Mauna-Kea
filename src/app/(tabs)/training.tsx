@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 
 import { AddPanel } from '@/components/AddPanel';
@@ -17,12 +17,37 @@ export default function TrainingScreen() {
   // One clock drives every entrance animation; it restarts each time the tab gains focus.
   const clock = useSharedValue(0);
   const [visit, setVisit] = useState(0);
+
+  // The time-in-zone graph sits below the fold, so it has its own clock that starts when a third
+  // of the graph has scrolled into view (above the floating tab bar), once per visit.
+  const zoneClock = useSharedValue(0);
+  const zoneShown = useRef(false);
+  const zoneBox = useRef({ y: 0, h: 0 });
+  const viewH = useRef(0);
+  const scrollY = useRef(0);
+  const revealZones = useCallback(() => {
+    const { y, h } = zoneBox.current;
+    if (zoneShown.current || !h || !viewH.current) return;
+    if (scrollY.current + viewH.current - navH < y + h / 3) return;
+    zoneShown.current = true;
+    // Start at 350 so the first ticks begin almost at once (they are staggered from 450).
+    zoneClock.set(350);
+    zoneClock.set(withTiming(3000, { duration: 2650, easing: Easing.linear }));
+  }, [navH, zoneClock]);
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollY.current = e.nativeEvent.contentOffset.y;
+    revealZones();
+  };
+
   useFocusEffect(
     useCallback(() => {
       clock.set(0);
       clock.set(withTiming(3000, { duration: 3000, easing: Easing.linear }));
+      zoneClock.set(0);
+      zoneShown.current = false;
+      revealZones();
       setVisit((v) => v + 1);
-    }, [clock]),
+    }, [clock, zoneClock, revealZones]),
   );
 
   const kjWeek = useCountUp(TRAINING_STATS.thisWeek, visit);
@@ -37,11 +62,21 @@ export default function TrainingScreen() {
       contentContainerStyle={[styles.page, { paddingTop: headerTop, paddingBottom: navH + 24 }]}
       scrollIndicatorInsets={{ bottom: navH }}
       showsVerticalScrollIndicator={false}
+      onScroll={onScroll}
+      scrollEventThrottle={32}
+      onLayout={(e: LayoutChangeEvent) => {
+        viewH.current = e.nativeEvent.layout.height;
+        revealZones();
+      }}
     >
       <View style={{ gap: 6, paddingBottom: 24 }}>
         <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey }]}>Thu · Oct 22</Text>
         <Text maxFontSizeMultiplier={DT.fixed} style={styles.h1}>Training</Text>
       </View>
+
+      <Section title="Consistency" right="12 weeks">
+        <Consistency clock={clock} width={inner} />
+      </Section>
 
       <Section title="Weekly kJ" right="— target" rightColor={C.orangeText}>
         <View style={styles.baseline}>
@@ -56,12 +91,15 @@ export default function TrainingScreen() {
         </View>
       </Section>
 
-      <Section title="Time in zone" right="Last 8 weeks · 41h">
-        <ZoneGraph width={inner} clock={clock} />
-      </Section>
-
-      <Section title="Consistency" right="12 weeks">
-        <Consistency clock={clock} width={inner} />
+      <Section
+        title="Time in zone"
+        right="Last 8 weeks · 41h"
+        onLayout={(e) => {
+          zoneBox.current = { y: e.nativeEvent.layout.y, h: e.nativeEvent.layout.height };
+          revealZones();
+        }}
+      >
+        <ZoneGraph width={inner} clock={zoneClock} />
       </Section>
 
       <View style={[styles.logHead]}>
@@ -90,9 +128,21 @@ export default function TrainingScreen() {
   );
 }
 
-function Section({ title, right, rightColor = C.grey, children }: { title: string; right: string; rightColor?: string; children: React.ReactNode }) {
+function Section({
+  title,
+  right,
+  rightColor = C.grey,
+  onLayout,
+  children,
+}: {
+  title: string;
+  right: string;
+  rightColor?: string;
+  onLayout?: (e: LayoutChangeEvent) => void;
+  children: React.ReactNode;
+}) {
   return (
-    <View style={styles.section}>
+    <View style={styles.section} onLayout={onLayout}>
       <View style={styles.sectionHead}>
         <Text maxFontSizeMultiplier={DT.list} style={caps}>{title}</Text>
         <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: rightColor }]}>{right}</Text>
@@ -139,15 +189,15 @@ function Consistency({ clock, width }: { clock: SharedValue<number>; width: numb
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 8 }}>
         <View style={styles.legend}>
-          <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: C.ink }} />
+          <View style={{ width: 15, height: 15, borderRadius: 7.5, backgroundColor: C.ink }} />
           <Text maxFontSizeMultiplier={DT.list} style={styles.note}>Ride</Text>
         </View>
         <View style={styles.legend}>
-          <View style={{ width: 11, height: 11, borderRadius: 6, borderWidth: 1.5, borderColor: C.ink }} />
+          <View style={{ width: 13, height: 13, borderRadius: 6.5, borderWidth: 1.6, borderColor: C.ink }} />
           <Text maxFontSizeMultiplier={DT.list} style={styles.note}>Other activity</Text>
         </View>
         <View style={styles.legend}>
-          <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: C.orange }} />
+          <View style={{ width: 15, height: 15, borderRadius: 7.5, backgroundColor: C.orange }} />
           <Text maxFontSizeMultiplier={DT.list} style={styles.note}>This week</Text>
         </View>
       </View>
@@ -169,17 +219,17 @@ function Dot({ kind, now, delay, clock }: { kind: string; now: boolean; delay: n
   });
   return (
     <Animated.View style={[styles.cellBox, st]}>
-      {today && <View style={[styles.ring, { width: 14.6, height: 14.6, borderRadius: 7.3, borderColor: C.ink, borderWidth: 1.1 }]} />}
-      {k === 'ride' && <View style={{ width: 11, height: 11, borderRadius: 5.5, backgroundColor: col }} />}
-      {k === 'other' && <View style={[styles.ring, { width: 9.5, height: 9.5, borderRadius: 4.75, borderColor: col, borderWidth: 1.5 }]} />}
+      {today && <View style={[styles.ring, { width: 21, height: 21, borderRadius: 10.5, borderColor: C.ink, borderWidth: 1.2 }]} />}
+      {k === 'ride' && <View style={{ width: 15, height: 15, borderRadius: 7.5, backgroundColor: col }} />}
+      {k === 'other' && <View style={[styles.ring, { width: 13, height: 13, borderRadius: 6.5, borderColor: col, borderWidth: 1.6 }]} />}
       {k === 'both' && (
         <>
-          <View style={[styles.ring, { width: 13.6, height: 13.6, borderRadius: 6.8, borderColor: col, borderWidth: 1.5 }]} />
-          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: col }} />
+          <View style={[styles.ring, { width: 18, height: 18, borderRadius: 9, borderColor: col, borderWidth: 1.6 }]} />
+          <View style={{ width: 10.5, height: 10.5, borderRadius: 5.25, backgroundColor: col }} />
         </>
       )}
       {(k === 'rest' || k === 'future') && (
-        <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: k === 'rest' ? '#B8B6B0' : C.line }} />
+        <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: k === 'rest' ? '#B8B6B0' : C.line }} />
       )}
     </Animated.View>
   );
