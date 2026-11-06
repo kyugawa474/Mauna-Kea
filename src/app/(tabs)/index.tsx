@@ -237,7 +237,7 @@ export default function TodayScreen() {
         {/* ───────────── frosted film: the fuel ───────────── */}
         <Animated.View style={[styles.filmBox, filmBox]} pointerEvents="box-none">
           <Animated.View style={[{ position: 'absolute', left: 0, right: 0, height: contentH }, filmInner]} pointerEvents="box-none">
-            <Animated.View style={[StyleSheet.absoluteFill, page]} pointerEvents="none">
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
               <FrostCanvas
                 edge={edge}
                 waterR={waterRadius(day.tgt)}
@@ -245,11 +245,12 @@ export default function TodayScreen() {
                 protein={gP}
                 fat={gF}
                 goals={{ C: day.TC, P: day.TP, F: day.TF }}
+                dx={dx}
                 s={s}
                 width={width}
                 height={contentH}
               />
-            </Animated.View>
+            </View>
 
             <View style={atHead(56)}>
               <Header label={day.label} selected={dayIndex} onSelect={setDayIndex} onLongPress={dayIndex === 3 ? cycleThuPhase : undefined} />

@@ -36,6 +36,8 @@ interface Props {
   protein: SharedValue<number>;
   fat: SharedValue<number>;
   goals: { C: number; P: number; F: number };
+  /** Horizontal day-swipe offset (pt). The water and rings travel with it; the frost film stays put. */
+  dx: SharedValue<number>;
   s: number;
   width: number;
   height: number;
@@ -45,7 +47,7 @@ interface Props {
  * The frosted film. Underneath it the water — a white, refracting pool the size of the kJ
  * target — stands for refuelling. Swiping up draws three macro goal rings over it.
  */
-export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, s, width, height }: Props) {
+export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, dx, s, width, height }: Props) {
   const t = useSharedValue(0);
   useEffect(() => {
     t.set(withRepeat(withTiming(1, { duration: 8000, easing: Easing.inOut(Easing.sin) }), -1, true));
@@ -65,6 +67,7 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, s, width
   const glowTo = useDerivedValue(() => vec(0, edge.value + 27));
 
   const h = height / s;
+  const shift = useDerivedValue(() => [{ translateX: dx.value / s }]);
   const font = useFont(require('@expo-google-fonts/ibm-plex-mono/500Medium/IBMPlexMono_500Medium.ttf'), 11);
 
   return (
@@ -76,12 +79,14 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, s, width
           <FractalNoise freqX={1.15} freqY={1.15} octaves={3} seed={1} />
         </Rect>
 
-        <Circle cx={CX} cy={CY} r={waterR} color={waterColor} opacity={waterOpacity}>
-          <DisplacementMap channelX="r" channelY="g" scale={22}>
-            <FractalNoise freqX={fx} freqY={fy} octaves={2} seed={3} />
-          </DisplacementMap>
-          <Blur blur={vec(13, 12)} />
-        </Circle>
+        <Group transform={shift}>
+          <Circle cx={CX} cy={CY} r={waterR} color={waterColor} opacity={waterOpacity}>
+            <DisplacementMap channelX="r" channelY="g" scale={22}>
+              <FractalNoise freqX={fx} freqY={fy} octaves={2} seed={3} />
+            </DisplacementMap>
+            <Blur blur={vec(13, 12)} />
+          </Circle>
+        </Group>
 
         {/* waterline */}
         <Rect rect={hl} opacity={0.85}>
@@ -96,9 +101,11 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, s, width
           <LinearGradient start={glowFrom} end={glowTo} colors={['#FFFFFF47', '#FFFFFF00']} />
         </Rect>
 
-        <Ring label="Carbs" value={carbs} goal={goals.C} r={RING_R[0]} color={C.ink} edge={edge} font={font} />
-        <Ring label="Protein" value={protein} goal={goals.P} r={RING_R[1]} color={C.orange} edge={edge} font={font} />
-        <Ring label="Fat" value={fat} goal={goals.F} r={RING_R[2]} color={C.peach} edge={edge} font={font} />
+        <Group transform={shift}>
+          <Ring label="Carbs" value={carbs} goal={goals.C} r={RING_R[0]} color={C.ink} edge={edge} font={font} />
+          <Ring label="Protein" value={protein} goal={goals.P} r={RING_R[1]} color={C.orange} edge={edge} font={font} />
+          <Ring label="Fat" value={fat} goal={goals.F} r={RING_R[2]} color={C.peach} edge={edge} font={font} />
+        </Group>
       </Group>
     </Canvas>
   );
