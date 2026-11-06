@@ -57,25 +57,33 @@ export function SunCanvas({ day, edge, s, width, height }: Props) {
   const labels = useMemo(() => (font ? zoneLabels(scale.n, day.zoneLabels, font) : []), [scale, day.zoneLabels, font]);
   const separators = useMemo(() => zoneSeparators(scale.n, labels), [scale, labels]);
 
-  if (r === 0) return null;
+  // A day with a goal but no riding yet (a planned day, or today before the ride) shows the goal as
+  // a white outline the size the sun will reach at that many kJ.
+  const goalR = day.kj === 0 ? sunRadius(day.tgt) : 0;
+  if (r === 0 && goalR === 0) return null;
 
   return (
     <Canvas style={{ position: 'absolute', left: 0, top: 0, width, height }} pointerEvents="none">
       <Group transform={[{ scale: s }]}>
         <Group clip={clip}>
-          <Circle cx={CX} cy={CY} r={r} color={C.orange}>
-            <DisplacementMap channelX="r" channelY="g" scale={4}>
-              <FractalNoise freqX={fx} freqY={fy} octaves={2} seed={4} />
-            </DisplacementMap>
-            <Blur blur={0.8} />
-          </Circle>
-          {groups.map((g) => (
-            <RayGroup key={g.color} color={g.color} ticks={g.ticks} r={r} edge={edge} />
-          ))}
-          {font && labels.map((z) => <ZoneText key={z[0]} z={z} font={font} edge={edge} />)}
-          {separators.marks.map((m) => (
-            <ZoneSeparator key={m.deg} deg={m.deg} lo={separators.lo} hi={separators.hi} edge={edge} />
-          ))}
+          {goalR > 0 && <Circle cx={CX} cy={CY} r={goalR} color={C.white} style="stroke" strokeWidth={2} />}
+          {r > 0 && (
+            <>
+              <Circle cx={CX} cy={CY} r={r} color={C.orange}>
+                <DisplacementMap channelX="r" channelY="g" scale={4}>
+                  <FractalNoise freqX={fx} freqY={fy} octaves={2} seed={4} />
+                </DisplacementMap>
+                <Blur blur={0.8} />
+              </Circle>
+              {groups.map((g) => (
+                <RayGroup key={g.color} color={g.color} ticks={g.ticks} r={r} edge={edge} />
+              ))}
+              {font && labels.map((z) => <ZoneText key={z[0]} z={z} font={font} edge={edge} />)}
+              {separators.marks.map((m) => (
+                <ZoneSeparator key={m.deg} deg={m.deg} lo={separators.lo} hi={separators.hi} edge={edge} />
+              ))}
+            </>
+          )}
         </Group>
       </Group>
     </Canvas>
