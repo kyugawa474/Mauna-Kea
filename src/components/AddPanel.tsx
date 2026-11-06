@@ -17,9 +17,12 @@ import { DAYS, RECENT_FOODS } from '@/data/sample';
 import { MEALS, useApp } from '@/state/AppState';
 import { C, DT, F, caps, useLayout, T } from '@/theme';
 
-/** "Bloom" food log: a circle grows out of the + button, then rows stagger in. */
+/**
+ * "Bloom" food log: a circle grows out of the + button, then rows stagger in. Each tab screen
+ * renders one, so it covers the screen under the floating tab bar and the + (now ✕) stays on top.
+ */
 export function AddPanel() {
-  const { width, contentH, headerTop } = useLayout();
+  const { width, height, headerTop } = useLayout();
   const { addOpen, setAddOpen, meal, setMeal, picked, togglePick, variant } = useApp();
   const open = useSharedValue(0);
 
@@ -52,16 +55,19 @@ export function AddPanel() {
     });
   }, [addOpen, open]);
 
-  const R = Math.hypot(width / 2, contentH) + 40;
+  // The + is the prominent tab at the bar's trailing end; the bloom grows from its centre.
+  const ox = width - FAB_INSET;
+  const oy = height - FAB_INSET;
+  const R = Math.hypot(ox, oy) + 40;
   const circle = useAnimatedStyle(() => ({ transform: [{ scale: open.value }] }));
 
   const addedKcal = RECENT_FOODS.reduce((n, f, i) => n + (picked[i] ? f.kcal : 0), 0);
 
   return (
-    <View pointerEvents={addOpen ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, { bottom: undefined, height: contentH, overflow: 'hidden', zIndex: 45 }]}>
+    <View pointerEvents={addOpen ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, { overflow: 'hidden', zIndex: 45 }]}>
       <Animated.View
         style={[
-          { position: 'absolute', width: R * 2, height: R * 2, borderRadius: R, backgroundColor: C.bg, left: width / 2 - R, top: contentH - R },
+          { position: 'absolute', width: R * 2, height: R * 2, borderRadius: R, backgroundColor: C.bg, left: ox - R, top: oy - R },
           circle,
         ]}
       />
@@ -135,6 +141,9 @@ export function AddPanel() {
     </View>
   );
 }
+
+/** Distance from the screen's trailing and bottom edges to the + button's centre (pt, measured on an iPhone 18 Pro). */
+const FAB_INSET = 53;
 
 function Stagger({ i, addOpen, open, children }: { i: number; addOpen: boolean; open: SharedValue<number>; children: React.ReactNode }) {
   const p = useSharedValue(0);

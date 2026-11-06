@@ -29,13 +29,19 @@ export const F = {
 /** The design was drawn on a 390 × 844 frame with an 84px nav bar. */
 export const DESIGN_W = 390;
 export const NAV_H = 84;
+/** Height of the floating Liquid Glass tab bar capsule (iOS 26+), above the bottom inset. */
+const BAR_H = 62;
 
 /** Positions in the design are in "design px"; multiply by `s` to get points on this device. */
 export function useLayout() {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const s = width / DESIGN_W;
-  const navH = 60 + Math.max(insets.bottom, 12);
+  // The system tab bar floats over the content and can't be measured (Expo Router native tabs),
+  // so `navH` is how much of the screen's foot it covers: its 62pt capsule plus the gap below it
+  // (the home-indicator inset less 12pt; 84pt on an iPhone 18 Pro, measured in the Simulator).
+  // Screens draw under it to the bottom edge (`height`) and keep content above `contentH`.
+  const navH = BAR_H + Math.max(insets.bottom - 12, 12);
   // Past ~1.35× text, rows of three tiles stack vertically instead of squeezing.
   const { fontScale } = useWindowDimensions();
   // Screen headers start a comfortable gap below the status bar (the design's 56 was tighter than

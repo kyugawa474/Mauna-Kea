@@ -34,13 +34,15 @@ interface Props {
   height: number;
   /** Bottom of the Ride headline (design px), measured on screen; the pulled-down sun stays below it. */
   headBottom: number;
+  /** Top of the ride stats row (design px); the pulled-down sun stays above it. */
+  rowTop: number;
 }
 
 /**
  * Base layer: the sun. Its area is the kJ burned today; pulling the frost down
  * draws power rays clockwise (2 W each, 0–400 W; Z5 at 6 W), ray length = time spent at that power.
  */
-export function SunCanvas({ day, edge, s, width, height, headBottom }: Props) {
+export function SunCanvas({ day, edge, s, width, height, headBottom, rowTop }: Props) {
   const r = sunRadius(day.kj);
   const font = useFont(require('@expo-google-fonts/ibm-plex-mono/400Regular/IBMPlexMono_400Regular.ttf'), 10.5);
 
@@ -63,7 +65,7 @@ export function SunCanvas({ day, edge, s, width, height, headBottom }: Props) {
   // A long ride's sun is big (1,300 kJ fills 350 of the 390 px frame), so once its rays are out they
   // would run off the sides and up into the headline. Pulling down zooms the drawing just enough to
   // fit; at rest the sun stays area-true. Ordinary days already fit, so they don't zoom.
-  const fit = useMemo(() => fitScale(scale.ticks, r, headBottom + 8), [scale, r, headBottom]);
+  const fit = useMemo(() => fitScale(scale.ticks, r, headBottom + 8, rowTop - 10), [scale, r, headBottom, rowTop]);
   const zoom = useDerivedValue(() => [{ scale: 1 + (fit - 1) * ramp(progress(edge.value), 0.5, 0.15) }]);
 
   // A day with a goal but no riding yet (a planned day, or today before the ride) shows the goal as
@@ -115,21 +117,20 @@ const RAY_MAX = 40;
 /** Where the pulled-down sun must fit (design px): side margins and the top of the ride metrics row. */
 const FIT_LEFT = 8;
 const FIT_RIGHT = 382;
-const FIT_BOTTOM = 644;
 
 /**
  * The largest zoom (≤ 1, about the sun's centre) that keeps every ray tip inside the frame: clear of
  * the screen sides, below `top` and above the ride metrics. Zone labels sit inside the disc, so the
  * ray tips are the outermost marks.
  */
-function fitScale(ticks: Tick[], r: number, top: number) {
+function fitScale(ticks: Tick[], r: number, top: number, bottom: number) {
   let z = 1;
   for (const { deg, L } of ticks) {
     const { x, y } = polar(r + 9 + L, deg);
     if (x < CX) z = Math.min(z, (CX - FIT_LEFT) / (CX - x));
     if (x > CX) z = Math.min(z, (FIT_RIGHT - CX) / (x - CX));
     if (y < CY) z = Math.min(z, (CY - top) / (CY - y));
-    if (y > CY) z = Math.min(z, (FIT_BOTTOM - CY) / (y - CY));
+    if (y > CY) z = Math.min(z, (bottom - CY) / (y - CY));
   }
   return Math.max(0.5, z);
 }
