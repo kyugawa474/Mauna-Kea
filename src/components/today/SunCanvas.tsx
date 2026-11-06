@@ -35,7 +35,7 @@ interface Props {
 
 /**
  * Base layer: the sun. Its area is the kJ burned today; pulling the frost down
- * draws 100 power rays clockwise (4 W each, 0–400 W), ray length = time spent at that power.
+ * draws power rays clockwise (2 W each, 0–400 W; Z5 at 6 W), ray length = time spent at that power.
  */
 export function SunCanvas({ day, edge, s, width, height }: Props) {
   const r = sunRadius(day.kj);
@@ -85,17 +85,40 @@ export function SunCanvas({ day, edge, s, width, height }: Props) {
 type Tick = { deg: number; L: number; color: string };
 
 const GREY = '#C4C2BC'; // zero-time ticks arrive pre-coloured grey at a floor length
-const Z5 = ZONE_STARTS[ZONE_STARTS.length - 1];
-/** Z5 rays are merged three at a time (12 W each) so its thin tail doesn't take a third of the sun. */
+/** Each 4 W data step is drawn as this many rays (2 W each). */
+const SPLIT = 2;
+/** Zone thresholds on the 2 W scale. */
+const STARTS = ZONE_STARTS.map((i) => i * SPLIT);
+const Z5 = STARTS[STARTS.length - 1];
+/** Z5 rays are merged three at a time (6 W each) so its thin tail doesn't take a third of the sun. */
 const Z5_MERGE = 3;
 const ZONE_NAMES = ['RECOVERY', 'ENDURANCE', 'TEMPO', 'THRESHOLD', 'VO2+'];
 
 /**
- * The sun's power scale. Z1–Z4 keep one ray per 4 W; Z5 merges every three 4 W rays into one 12 W
- * ray whose length is their average time per 4 W, so ray length means the same thing everywhere and
+ * Split each 4 W step into two 2 W rays. Each half leans a quarter of the way toward its neighbour
+ * (linear interpolation), so the outline gets smoother rather than just doubled. Zero-time (grey)
+ * steps stay grey and never pull a neighbour down; colour stays with the step, so zone edges hold.
+ */
+function upsample(rays: [number, string][]) {
+  const out: [number, string][] = [];
+  const lenAt = (j: number, own: number) => (j >= 0 && j < rays.length && rays[j][1] !== GREY ? rays[j][0] : own);
+  rays.forEach(([L, color], i) => {
+    if (color === GREY) {
+      out.push([L, color], [L, color]);
+      return;
+    }
+    out.push([0.75 * L + 0.25 * lenAt(i - 1, L), color], [0.75 * L + 0.25 * lenAt(i + 1, L), color]);
+  });
+  return out;
+}
+
+/**
+ * The sun's power scale. Z1–Z4 get one ray per 2 W; Z5 merges every three 2 W rays into one 6 W
+ * ray whose length is their average time per step, so ray length means the same thing everywhere and
  * only the angle is compressed. Rays are spread evenly round the full circle.
  */
-function buildScale(rays: [number, string][]) {
+function buildScale(data: [number, string][]) {
+  const rays = upsample(data);
   const merged: [number, string][] = rays.slice(0, Z5);
   for (let i = Z5; i < rays.length; i += Z5_MERGE) {
     const group = rays.slice(i, i + Z5_MERGE);
@@ -110,7 +133,7 @@ function buildScale(rays: [number, string][]) {
 }
 
 /** Index of the first ray of each zone (Z1..Z5) on the merged scale. */
-const zoneStartsOn = () => [0, ...ZONE_STARTS];
+const zoneStartsOn = () => [0, ...STARTS];
 
 function groupTicks(ticks: Tick[]) {
   const map = new Map<string, Tick[]>();
@@ -172,7 +195,7 @@ function RayGroup({ color, ticks, r, edge }: { color: string; ticks: Tick[]; r: 
  */
 function zoneSeparators(n: number, labels: ZoneLabel[]) {
   if (!labels.length) return { marks: [] as { deg: number }[], lo: 0, hi: 0 };
-  const marks = ZONE_STARTS.map((index) => ({ deg: (index * 360) / n }));
+  const marks = STARTS.map((index) => ({ deg: (index * 360) / n }));
   // Labels read along their baseline at radius R, glyphs reaching ~7px inward or outward.
   const radii = labels.map(([, R]) => R);
   return { marks, lo: Math.min(...radii) - 3, hi: Math.max(...radii) + 2 };
