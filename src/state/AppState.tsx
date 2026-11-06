@@ -4,6 +4,8 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import { DAYS, RECENT_FOODS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
 
 export type ThuPhase = 'thu_start' | 'thu_mid' | 'thu_end';
+/** What a day has logged: nothing, a meal only, or a meal plus an activity. */
+export type DayLog = 'none' | 'meal' | 'both';
 export const MEALS = ['Breakfast', 'Lunch', 'Snack', 'Dinner'] as const;
 export type Meal = (typeof MEALS)[number];
 
@@ -27,6 +29,8 @@ interface AppState {
   /** Ticked in the add panel but not yet committed. */
   picked: Record<number, boolean>;
   togglePick: (foodIndex: number) => void;
+  /** Per weekday (Mon–Sun), what has been logged; drives the week strip's marks. */
+  weekLog: DayLog[];
   /** Totals for the current day including committed foods. */
   totals: { gP: number; gC: number; gF: number; left: number; addedKcal: number };
 }
@@ -42,8 +46,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [picks, setPicks] = useState<Picks>({});
   const [committed, setCommitted] = useState<Picks>({});
 
-  const variant: DayVariant =
-    dayIndex === 3 ? thuPhase : dayIndex === 5 && satDone ? 'sat_done' : (WEEK[dayIndex] as DayVariant);
+  const variantFor = useCallback(
+    (i: number): DayVariant => (i === 3 ? thuPhase : i === 5 && satDone ? 'sat_done' : (WEEK[i] as DayVariant)),
+    [thuPhase, satDone],
+  );
+  const variant = variantFor(dayIndex);
 
   const toggleSatDone = useCallback(() => setSatDone((d) => !d), []);
 
@@ -83,10 +90,23 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return { gP: base.gP + aP, gC: base.gC + aC, gF: base.gF + aF, left: Math.max(0, base.left - aK), addedKcal: aK };
   }, [committed, variant]);
 
+  // A meal counts once any kcal are eaten (in the sample data or committed from the food log);
+  // an activity once any kJ are ridden. An activity with no meal logged shows as nothing yet.
+  const weekLog = useMemo(
+    () =>
+      WEEK.map((_, i): DayLog => {
+        const v = variantFor(i);
+        const d = DAYS[v];
+        const meal = d.left < d.of || Object.values(committed[v] ?? {}).some(Boolean);
+        return meal ? (d.kj > 0 ? 'both' : 'meal') : 'none';
+      }),
+    [variantFor, committed],
+  );
+
   const value: AppState = {
     dayIndex, setDayIndex, thuPhase, cycleThuPhase, satDone, toggleSatDone, variant,
     addOpen, setAddOpen, meal, setMeal,
-    picked: picks[variant] ?? {}, togglePick, totals,
+    picked: picks[variant] ?? {}, togglePick, weekLog, totals,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
