@@ -7,6 +7,10 @@ import { C, F } from '@/theme';
 
 const PLUS = require('../../../assets/tabs/plus.png');
 const CLOSE = require('../../../assets/tabs/close.png');
+// SF Symbols `circle` and `circle.hexagonpath` at Light weight, pre-rendered because the native tab
+// icon has no weight option (scripts/render-sf-symbol.swift). Template mode lets the bar tint them.
+const TODAY = require('../../../assets/tabs/today.png');
+const TRAINING = require('../../../assets/tabs/training.png');
 
 /**
  * The system tab bar (Liquid Glass on iOS 26+). Today and Training share the capsule; "Log food"
@@ -35,13 +39,13 @@ export default function TabsLayout() {
           tabPress: () => navigation.isFocused() && setDayIndex(TODAY_INDEX),
         })}
       >
-        <NativeTabs.Trigger.Icon sf={{ default: 'sun.max', selected: 'sun.max.fill' }} md="wb_sunny" />
-        <NativeTabs.Trigger.Label>TODAY</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon src={TODAY} renderingMode="template" />
+        <NativeTabs.Trigger.Label hidden>Today</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="training" disableAutomaticContentInsets contentStyle={{ backgroundColor: C.bg }}>
-        <NativeTabs.Trigger.Icon sf={{ default: 'chart.bar', selected: 'chart.bar.fill' }} md="bar_chart" />
-        <NativeTabs.Trigger.Label>TRAINING</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon src={TRAINING} renderingMode="template" />
+        <NativeTabs.Trigger.Label hidden>Training</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger
