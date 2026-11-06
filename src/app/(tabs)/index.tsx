@@ -259,7 +259,7 @@ export default function TodayScreen() {
               <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Eat</Text>
               <Text maxFontSizeMultiplier={DT.fixed} style={[styles.big, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
               <View style={styles.baseline}>
-                <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={[styles.note, styles.shrink, { color: C.frostInk }]}>kcal left of {fmt(day.of)}</Text>
+                <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={[styles.note, styles.shrink, { color: C.frostInk }]}>kcal of {fmt(day.of)}</Text>
                 {totals.addedKcal > 0 && <Text maxFontSizeMultiplier={DT.fixed} style={[styles.note, { color: C.orangeText, opacity: live ? 1 : 0 }]}>−{totals.addedKcal}</Text>}
               </View>
             </Animated.View>
