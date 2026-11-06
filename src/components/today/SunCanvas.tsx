@@ -82,14 +82,14 @@ export function SunCanvas({ day, edge, s, width, height, headBottom, rowTop }: P
           {goalR > 0 && <Circle cx={CX} cy={CY} r={goalR} color={C.white} style="stroke" strokeWidth={2} />}
           {r > 0 && (
             <Group origin={vec(CX, CY)} transform={zoom}>
-              {/* After dark the sun keeps its orange and gains a soft halo, so it reads as the warm
-                  light source against the night sky. */}
+              {/* After dark the disc gains a soft halo. At dawn and dusk it stays the orange sun;
+                  at night `sun` turns it into the moon (still sized by the day's kJ). */}
               {sky.sunGlow > 0 && (
-                <Circle cx={CX} cy={CY} r={r + 18} color={C.orange} opacity={sky.sunGlow}>
+                <Circle cx={CX} cy={CY} r={r + 18} color={C.sun} opacity={sky.sunGlow}>
                   <Blur blur={28} />
                 </Circle>
               )}
-              <Circle cx={CX} cy={CY} r={r} color={C.orange}>
+              <Circle cx={CX} cy={CY} r={r} color={C.sun}>
                 <DisplacementMap channelX="r" channelY="g" scale={4}>
                   <FractalNoise freqX={fx} freqY={fy} octaves={2} seed={4} />
                 </DisplacementMap>

@@ -14,6 +14,8 @@ const LIGHT = {
   line: '#CFCEC9',
   tile: 'rgba(17,17,17,0.05)', // translucent so the sky shows through
   orange: '#FF4F1A', // fills only
+  /** The sun disc, its halo and its reflection in the water. Orange, except at night (the moon). */
+  sun: '#FF4F1A',
   orangeText: '#AD3712', // orange for text: ≥4.5:1 on bg and frost
   peach: '#D06C49', // fat; ≥3:1 on the water pool where the rings sit
   tickOff: '#8D8B85', // empty ring ticks; ≥3:1 on the water pool
@@ -52,7 +54,8 @@ const DARK: Palette = {
   grey2: '#767B84',
   line: '#2A303A',
   tile: 'rgba(238,235,228,0.06)',
-  orange: '#FF4F1A', // the sun stays the same orange
+  orange: '#FF4F1A',
+  sun: '#FF4F1A',
   orangeText: '#FF8A63', // lighter for text on dark
   peach: '#E58A66',
   tickOff: '#8A94A2', // ≥3:1 on the night pool
@@ -144,8 +147,9 @@ export const SKIES: Record<Phase, Sky> = {
     positions: [0, 0.5, 1],
     frost: 'rgba(120,160,200,0.10)',
     veil: 'rgba(0,0,0,0)',
-    tokens: { grey2: '#7C818A' },
-    sunGlow: 0.5,
+    // At night the sun becomes the moon: a warm white disc, a pale halo and a white reflection.
+    tokens: { grey2: '#7C818A', sun: '#E9E5DA' },
+    sunGlow: 0.22,
     stars: 1,
   },
 };

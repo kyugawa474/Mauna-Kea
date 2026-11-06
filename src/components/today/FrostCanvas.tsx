@@ -51,7 +51,7 @@ interface Props {
  */
 export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, dx, s, width, height }: Props) {
   const { C, sky } = useTheme();
-  const { orange, pool, glint, glintK } = C;
+  const { sun, pool, glint, glintK } = C;
   const line = [0, 0.95, 0.5, 1, 0.45, 0.9, 0].map((a) => withAlpha(glint, a * glintK));
   const t = useSharedValue(0);
   useEffect(() => {
@@ -64,7 +64,7 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, dx, s, w
   // The pool reflects the sun in orange at rest and when pulled down, and clears to white as the
   // frost rises, finishing just before the macro rings start drawing (they need the white to read).
   const waterColor = useDerivedValue(() =>
-    interpolateColor(ramp(progress(edge.value), 0.5, 0.56), [0, 1], [orange, pool]),
+    interpolateColor(ramp(progress(edge.value), 0.5, 0.56), [0, 1], [sun, pool]),
   );
   const hl = useDerivedValue(() => Skia.XYWHRect(0, edge.value - 1, 390, 2));
   const glow = useDerivedValue(() => Skia.XYWHRect(0, edge.value + 1, 390, 26));
