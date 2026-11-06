@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 
+import { AddPanel } from '@/components/AddPanel';
 import { WeeklyBars } from '@/components/training/WeeklyBars';
 import { ZoneGraph } from '@/components/training/ZoneGraph';
 import { ACTIVITY_LOG, CONSISTENCY, TRAINING_STATS } from '@/data/sample';
@@ -10,7 +11,7 @@ import { fmt, useCountUp } from '@/lib/useTween';
 import { C, DT, F, caps, useLayout, T } from '@/theme';
 
 export default function TrainingScreen() {
-  const { width, stackTiles, headerTop } = useLayout();
+  const { width, stackTiles, headerTop, navH } = useLayout();
   const inner = width - 40;
 
   // One clock drives every entrance animation; it restarts each time the tab gains focus.
@@ -28,7 +29,15 @@ export default function TrainingScreen() {
   const kjAvg = useCountUp(TRAINING_STATS.avgWeek, visit);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={[styles.page, { paddingTop: headerTop }]} showsVerticalScrollIndicator={false}>
+    // The wrapper keeps the ScrollView first in the screen, so the glass bar still tracks its scroll edge.
+    <View style={{ flex: 1, backgroundColor: C.bg }} collapsable={false}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: C.bg }}
+      // Content scrolls under the floating tab bar; the last row stops clear of it.
+      contentContainerStyle={[styles.page, { paddingTop: headerTop, paddingBottom: navH + 24 }]}
+      scrollIndicatorInsets={{ bottom: navH }}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={{ gap: 6, paddingBottom: 24 }}>
         <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey }]}>Thu · Oct 22</Text>
         <Text maxFontSizeMultiplier={DT.fixed} style={styles.h1}>Training</Text>
@@ -76,6 +85,8 @@ export default function TrainingScreen() {
         </View>
       ))}
     </ScrollView>
+    <AddPanel />
+    </View>
   );
 }
 

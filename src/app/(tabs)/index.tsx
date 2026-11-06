@@ -17,6 +17,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { FrostCanvas } from '@/components/today/FrostCanvas';
 import { SunCanvas } from '@/components/today/SunCanvas';
 import { WeekStrip } from '@/components/today/WeekStrip';
+import { AddPanel } from '@/components/AddPanel';
 import { DAYS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
 import { CX, CY, EDGE_DOWN, EDGE_REST, EDGE_UP, progress, ramp, snapEdge, sunRadius, waterRadius } from '@/lib/frost';
 import { fmt, useTween } from '@/lib/useTween';
@@ -33,12 +34,14 @@ const FUEL_REST = 590;
 const HEAD_Y = 133;
 /** Where the macro (and ride metric) row sits once revealed. */
 const ROW_Y = 654;
+/** The row's height in points (rule, label, number), used to keep it clear of the floating tab bar. */
+const ROW_H = 64;
 
 /** The gesture hint shows until the first vertical drag (per app session; nothing is persisted yet). */
 let hintDismissed = false;
 
 export default function TodayScreen() {
-  const { s, width, contentH, headerTop } = useLayout();
+  const { s, width, height, contentH, headerTop } = useLayout();
   const { dayIndex, setDayIndex, variant, cycleThuPhase, totals } = useApp();
   const day = DAYS[variant];
 
@@ -191,11 +194,14 @@ export default function TodayScreen() {
     return e >= EDGE_REST ? restTop + (e - EDGE_REST) * s : headTop + (restTop - headTop) * (e / EDGE_REST);
   };
   const fuelMove = useAnimatedStyle(() => ({ top: fuelTopAt(edge.value) }));
-  const macrosMove = useAnimatedStyle(() => ({ top: Math.max(ROW_Y * s, fuelTopAt(edge.value) + (contentH + 8 - restTop)) }));
+  // The row sits at its design spot unless that would tuck it under the tab bar.
+  const rowTop = Math.min(ROW_Y * s, contentH - ROW_H - 12);
+  const macrosMove = useAnimatedStyle(() => ({ top: Math.max(rowTop, fuelTopAt(edge.value) + (height + 8 - restTop)) }));
 
   return (
+    <View style={styles.root} collapsable={false}>
     <GestureDetector gesture={pan}>
-      <View style={[styles.screen, { height: contentH }]} collapsable={false}>
+      <View style={[styles.screen, { height }]} collapsable={false}>
         {/* ───────────── base layer: the ride ───────────── */}
         <Animated.View
           style={[StyleSheet.absoluteFill, page]}
@@ -211,7 +217,7 @@ export default function TodayScreen() {
             goTo(up ? (mode === EDGE_DOWN ? EDGE_REST : EDGE_UP) : mode === EDGE_UP ? EDGE_REST : EDGE_DOWN);
           }}
         >
-          <SunCanvas day={day} edge={edge} s={s} width={width} height={contentH} />
+          <SunCanvas day={day} edge={edge} s={s} width={width} height={height} />
         </Animated.View>
 
         {tomorrow && tomorrow.tgt > 0 && <Tomorrow day={tomorrow} s={s} page={page} />}
@@ -227,7 +233,7 @@ export default function TodayScreen() {
         </Animated.View>
 
         {day.ride && (
-          <Animated.View style={[at(ROW_Y), styles.grid, page, metricsOut]}>
+          <Animated.View style={[at(ROW_Y), { top: rowTop }, styles.grid, page, metricsOut]}>
             <Metric label="Time" value={day.ride.min} unit=" min" bar={C.ink} />
             <Metric label="Avg power" value={day.ride.w} unit=" W" bar={C.orange} />
             <Metric label="Intensity" value={day.ride.pct} unit=" % FTP" bar="#A9A8A3" />
@@ -236,7 +242,7 @@ export default function TodayScreen() {
 
         {/* ───────────── frosted film: the fuel ───────────── */}
         <Animated.View style={[styles.filmBox, filmBox]} pointerEvents="box-none">
-          <Animated.View style={[{ position: 'absolute', left: 0, right: 0, height: contentH }, filmInner]} pointerEvents="box-none">
+          <Animated.View style={[{ position: 'absolute', left: 0, right: 0, height }, filmInner]} pointerEvents="box-none">
             <View style={StyleSheet.absoluteFill} pointerEvents="none">
               <FrostCanvas
                 edge={edge}
@@ -248,7 +254,7 @@ export default function TodayScreen() {
                 dx={dx}
                 s={s}
                 width={width}
-                height={contentH}
+                height={height}
               />
             </View>
 
@@ -303,6 +309,8 @@ export default function TodayScreen() {
         )}
       </View>
     </GestureDetector>
+    <AddPanel />
+    </View>
   );
 }
 
@@ -374,6 +382,7 @@ function Tomorrow({ day, s, page }: { day: (typeof DAYS)[DayVariant]; s: number;
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: C.bg },
   screen: { backgroundColor: C.bg, overflow: 'hidden' },
   filmBox: { position: 'absolute', left: 0, right: 0, bottom: 0, overflow: 'hidden' },
   block: { gap: 6, paddingTop: 12, alignItems: 'center' },
