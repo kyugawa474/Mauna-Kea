@@ -223,7 +223,6 @@ export default function TodayScreen() {
         <Animated.View style={[atHead(HEAD_Y), styles.block, page, rideOut]}>
           <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Ride</Text>
           <BigNumber value={fmt(day.kj)} note={day.note} />
-          {day.kj > 0 && <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={styles.note}>≈ {fmt(day.kj)} kcal burned · 1 kJ of work ≈ 1 kcal</Text>}
         </Animated.View>
 
         {day.ride && (

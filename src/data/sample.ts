@@ -43,7 +43,7 @@ export const DAYS: Record<DayVariant, Day> = {
   "label": "Tue \u00b7 Oct 20",
   "kj": 831,
   "tgt": 800,
-  "note": "/ 800 kJ \u00b7 target done",
+  "note": "/ 800 kJ",
   "gP": 142,
   "gC": 340,
   "gF": 70,
@@ -996,7 +996,7 @@ export const DAYS: Record<DayVariant, Day> = {
   "label": "Thu \u00b7 Oct 22",
   "kj": 653,
   "tgt": 600,
-  "note": "/ 600 kJ \u00b7 target done",
+  "note": "/ 600 kJ",
   "ride": {
    "min": 63,
    "w": 173,
