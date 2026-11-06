@@ -46,7 +46,7 @@ export default function TodayScreen() {
   const { s, width, height, contentH, headerTop } = useLayout();
   const { dayIndex, setDayIndex, variant, cycleThuPhase, toggleSatDone, totals } = useApp();
   const day = DAYS[variant];
-  const { C, caps, cyclePhase } = useTheme();
+  const { C, caps, openTweaks } = useTheme();
   const styles = useStyles();
 
   // ── the frost edge (design px) and the horizontal day-swipe offset (pt) ──
@@ -241,8 +241,8 @@ export default function TodayScreen() {
           style={[atHead(HEAD_Y), styles.block, page, rideOut]}
           onLayout={(e) => setHeadBottom((e.nativeEvent.layout.y + e.nativeEvent.layout.height) / s)}
         >
-          {/* Long-press the headline to preview the time-of-day phases (dev/design aid). */}
-          <Pressable onLongPress={cyclePhase} delayLongPress={600} style={styles.press} accessibilityHint="Long press to preview the next time-of-day theme">
+          {/* Long-press the headline to open the Tweaks panel (design preview controls). */}
+          <Pressable onLongPress={openTweaks} delayLongPress={600} style={styles.press} accessibilityHint="Long press for design tweaks">
             <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Ride</Text>
             <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{fmt(day.kj)}</Text>
           </Pressable>

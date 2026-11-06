@@ -14,6 +14,7 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AppStateProvider } from '@/state/AppState';
+import { Tweaks } from '@/components/Tweaks';
 import { ThemeProvider, useTheme } from '@/state/Theme';
 
 export default function RootLayout() {
@@ -42,6 +43,7 @@ function Root({ loaded }: { loaded: boolean }) {
       <AppStateProvider>
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg } }} />
+        <Tweaks />
       </AppStateProvider>
     </GestureHandlerRootView>
   );

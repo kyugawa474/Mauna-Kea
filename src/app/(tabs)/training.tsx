@@ -14,7 +14,7 @@ import { DT, F, useLayout, T, type Palette } from '@/theme';
 
 export default function TrainingScreen() {
   const { width, height, stackTiles, headerTop, navH } = useLayout();
-  const { C, caps, cyclePhase, override } = useTheme();
+  const { C, caps, openTweaks, override } = useTheme();
   const styles = useStyles();
   const inner = width - 40;
 
@@ -77,8 +77,8 @@ export default function TrainingScreen() {
         <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey }]}>
           Thu · Oct 22{override ? ` · ${override} preview` : ''}
         </Text>
-        {/* Long-press the title to preview the time-of-day phases (dev/design aid). */}
-        <Text maxFontSizeMultiplier={DT.fixed} style={styles.h1} onLongPress={cyclePhase} accessibilityHint="Long press to preview the next time-of-day theme">
+        {/* Long-press the title to open the Tweaks panel (design preview controls). */}
+        <Text maxFontSizeMultiplier={DT.fixed} style={styles.h1} onLongPress={openTweaks} accessibilityHint="Long press for design tweaks">
           Training
         </Text>
       </View>
