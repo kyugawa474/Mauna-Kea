@@ -105,8 +105,6 @@ export type Sky = Gradient & {
   tokens: Partial<Palette>;
   /** Opacity of the orange halo round the sun after dark. */
   sunGlow: number;
-  /** Opacity of the star field in the upper sky. */
-  stars: number;
 };
 export const SKIES: Record<Phase, Sky> = {
   dawn: {
@@ -118,7 +116,6 @@ export const SKIES: Record<Phase, Sky> = {
     veil: 'rgba(10,30,44,0.68)',
     tokens: { grey: '#D3DEE6', grey2: '#9AB0BF', orangeText: '#FFC4A6', frostInk: '#C4D6E0', tickOff: '#9AAAB8', zone5: '#FF9E70' },
     sunGlow: 0.3,
-    stars: 0.2,
   },
   day: {
     scheme: 'light',
@@ -128,7 +125,6 @@ export const SKIES: Record<Phase, Sky> = {
     veil: 'rgba(255,255,255,0.25)',
     tokens: { grey: '#3D4650', grey2: '#5F6872', orangeText: '#7F2508', frostInk: '#36464D' },
     sunGlow: 0,
-    stars: 0,
   },
   dusk: {
     scheme: 'dark',
@@ -139,7 +135,6 @@ export const SKIES: Record<Phase, Sky> = {
     veil: 'rgba(30,22,40,0.55)',
     tokens: { ink: '#FFFFFF', grey: '#D5CCE0', grey2: '#A796BB', orangeText: '#FFB896', frostInk: '#D8CCE4', zone5: '#FF9E70' },
     sunGlow: 0.35,
-    stars: 0.35,
   },
   night: {
     scheme: 'dark',
@@ -150,7 +145,6 @@ export const SKIES: Record<Phase, Sky> = {
     // At night the sun becomes the moon: a warm white disc, a pale halo and a white reflection.
     tokens: { grey2: '#7C818A', sun: '#E9E5DA' },
     sunGlow: 0.22,
-    stars: 1,
   },
 };
 

@@ -78,7 +78,7 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, dx, s, w
   return (
     <Canvas style={{ position: 'absolute', left: 0, top: 0, width, height }} pointerEvents="none">
       {/* The same sky as the backdrop, seen through the frost tint. */}
-      <SkyFill sky={sky} width={width} height={height} stars={false} />
+      <SkyFill sky={sky} width={width} height={height} />
       <Group transform={[{ scale: s }]}>
         <Rect x={0} y={0} width={390} height={h} color={C.frost} />
         {/* film grain */}
