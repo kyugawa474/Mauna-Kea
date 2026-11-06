@@ -131,7 +131,7 @@ export function AddPanel() {
                   accessibilityRole="button"
                   accessibilityLabel={(on ? 'Remove ' : 'Add ') + f.name}
                   hitSlop={4}
-                  style={[styles.addBtn, on && { backgroundColor: C.orange }]}
+                  style={[styles.addBtn, on && { backgroundColor: C.accent }]}
                 >
                   {on ? <Check /> : <Plus />}
                 </Pressable>
@@ -175,7 +175,7 @@ function Check() {
   // On the orange (picked) button: dark in both schemes.
   return (
     <View style={[styles.icon, { transform: [{ rotate: '-45deg' }, { translateY: -2 }] }]}>
-      <View style={{ width: 13, height: 6.5, borderLeftWidth: 1.8, borderBottomWidth: 1.8, borderColor: C.onOrange }} />
+      <View style={{ width: 13, height: 6.5, borderLeftWidth: 1.8, borderBottomWidth: 1.8, borderColor: C.onAccent }} />
     </View>
   );
 }

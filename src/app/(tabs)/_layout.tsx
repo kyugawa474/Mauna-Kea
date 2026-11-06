@@ -8,6 +8,9 @@ import { F } from '@/theme';
 
 const PLUS = require('../../../assets/tabs/plus.png');
 const CLOSE = require('../../../assets/tabs/close.png');
+// White copies for dawn, dusk and night, when white is the accent (scripts/tint-png.swift).
+const PLUS_WHITE = require('../../../assets/tabs/plus-white.png');
+const CLOSE_WHITE = require('../../../assets/tabs/close-white.png');
 // SF Symbols `circle` and `circle.hexagonpath` at Light weight, pre-rendered because the native tab
 // icon has no weight option (scripts/render-sf-symbol.swift). Template mode lets the bar tint them.
 const TODAY = require('../../../assets/tabs/today.png');
@@ -21,7 +24,8 @@ const TRAINING = require('../../../assets/tabs/training.png');
  */
 export default function TabsLayout() {
   const { addOpen, setAddOpen, setDayIndex } = useApp();
-  const { C } = useTheme();
+  const { C, scheme } = useTheme();
+  const dark = scheme === 'dark';
 
   return (
     <NativeTabs
@@ -63,8 +67,8 @@ export default function TabsLayout() {
         }}
       >
         {/* iOS colours every unselected item from the selected tab's appearance, so the orange
-            comes from the image: the SF Symbols plus / xmark pre-rendered in orange. */}
-        <NativeTabs.Trigger.Icon src={addOpen ? CLOSE : PLUS} renderingMode="original" />
+            comes from the image: the SF Symbols plus / xmark pre-rendered in orange (white after dark). */}
+        <NativeTabs.Trigger.Icon src={addOpen ? (dark ? CLOSE_WHITE : CLOSE) : dark ? PLUS_WHITE : PLUS} renderingMode="original" />
         <NativeTabs.Trigger.Label hidden>Log food</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>

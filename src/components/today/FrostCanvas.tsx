@@ -61,7 +61,7 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, dx, s, w
   const fy = useDerivedValue(() => 0.06 + 0.015 * t.value);
 
   const waterOpacity = useDerivedValue(() => 0.62 + 0.16 * ramp(progress(edge.value), 0.5, 0.62));
-  // The pool reflects the sun in orange at rest and when pulled down, and clears to white as the
+  // The pool reflects the sun (orange by day, white after dark) at rest and when pulled down, and clears to white as the
   // frost rises, finishing just before the macro rings start drawing (they need the white to read).
   const waterColor = useDerivedValue(() =>
     interpolateColor(ramp(progress(edge.value), 0.5, 0.56), [0, 1], [sun, pool]),
@@ -109,8 +109,8 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, dx, s, w
         </Rect>
 
         <Group transform={shift}>
-          <Ring label="Carbs" value={carbs} goal={goals.C} r={RING_R[0]} color={C.ink} edge={edge} font={font} ink={C.ink} off={C.tickOff} />
-          <Ring label="Protein" value={protein} goal={goals.P} r={RING_R[1]} color={C.orange} edge={edge} font={font} ink={C.ink} off={C.tickOff} />
+          <Ring label="Carbs" value={carbs} goal={goals.C} r={RING_R[0]} color={C.carbs} edge={edge} font={font} ink={C.ink} off={C.tickOff} />
+          <Ring label="Protein" value={protein} goal={goals.P} r={RING_R[1]} color={C.accent} edge={edge} font={font} ink={C.ink} off={C.tickOff} />
           <Ring label="Fat" value={fat} goal={goals.F} r={RING_R[2]} color={C.peach} edge={edge} font={font} ink={C.ink} off={C.tickOff} />
         </Group>
       </Group>

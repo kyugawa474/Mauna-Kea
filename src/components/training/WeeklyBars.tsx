@@ -96,16 +96,16 @@ function Bar({ w, i, x, colW, clock, C }: { w: Week; i: number; x: number; colW:
   const doneRect = useDerivedValue(() => clipFor(w.h, grow.value));
   const tgtRect = useDerivedValue(() => Skia.XYWHRect(bx, CHART_H - w.tgt - 1, bw * tgtIn.value, 2));
 
-  const stripe = w.kind === 'past' ? C.barStripe : w.kind === 'current' ? C.orangeWash : C.inkWash;
+  const stripe = w.kind === 'past' ? C.barStripe : w.kind === 'current' ? C.accentWash : C.inkWash;
 
   return (
     <Group>
       <Group clip={mainClip}>
-        {w.kind === 'past' && <Rect x={bx} y={0} width={bw} height={CHART_H} color={C.ink} />}
+        {w.kind === 'past' && <Rect x={bx} y={0} width={bw} height={CHART_H} color={C.past} />}
         <Path path={stripes} color={stripe} style="stroke" strokeWidth={w.kind === 'past' ? 1.5 : 3} />
       </Group>
-      {w.kind === 'current' && <Rect rect={doneRect} color={C.orange} />}
-      <Rect rect={tgtRect} color={C.orange} opacity={tgtIn} />
+      {w.kind === 'current' && <Rect rect={doneRect} color={C.accent} />}
+      <Rect rect={tgtRect} color={C.accent} opacity={tgtIn} />
     </Group>
   );
 }

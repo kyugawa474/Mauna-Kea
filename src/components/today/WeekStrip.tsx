@@ -32,13 +32,13 @@ export function WeekStrip({ selected, onSelect }: { selected: number; onSelect?:
             <View
               style={[
                 styles.mark,
-                m === 'fuelled' && { borderWidth: 1.5, borderColor: C.orange },
-                filled && { backgroundColor: C.orange },
+                m === 'fuelled' && { borderWidth: 1.5, borderColor: C.accent },
+                filled && { backgroundColor: C.accent },
                 m === 'rest' && { borderWidth: 1.2, borderColor: C.grey2, borderStyle: 'dashed' },
                 m === 'planned' && { borderWidth: 1.2, borderColor: C.line },
               ]}
             />
-            <Text maxFontSizeMultiplier={DT.strip} style={[styles.letter, { color: filled ? C.onOrange : m === 'fuelled' ? C.orangeText : C.grey }]}>{l}</Text>
+            <Text maxFontSizeMultiplier={DT.strip} style={[styles.letter, { color: filled ? C.onAccent : m === 'fuelled' ? C.accentText : C.grey }]}>{l}</Text>
           </Pressable>
         );
       })}

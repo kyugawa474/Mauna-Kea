@@ -1,6 +1,8 @@
 import { PixelRatio, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ZONE_COLORS } from '@/data/sample';
+
 /**
  * Colour tokens. Both schemes share the same names; `useTheme()` (src/state/Theme.tsx) picks one
  * from the time of day and applies the phase's overrides (SKIES[phase].tokens). The ratios noted
@@ -13,19 +15,26 @@ const LIGHT = {
   grey2: '#807E79', // outlines only (dashed/planned), ≥3:1 on bg; never text
   line: '#CFCEC9',
   tile: 'rgba(17,17,17,0.05)', // translucent so the sky shows through
-  orange: '#FF4F1A', // fills only
-  /** The sun disc, its halo and its reflection in the water. Orange, except at night (the moon). */
+  /** The accent: orange by day, white after dark (dawn, dusk, night). Fills only. */
+  accent: '#FF4F1A',
+  /** The sun disc, its halo and its reflection in the water. White after dark. */
   sun: '#FF4F1A',
-  orangeText: '#AD3712', // orange for text: ≥4.5:1 on bg and frost
+  accentText: '#AD3712', // the accent as text: ≥4.5:1 on bg and frost
+  /** Macro colours, rings and rules: carbs, protein (the accent) and fat (peach). */
+  carbs: '#111111',
   peach: '#D06C49', // fat; ≥3:1 on the water pool where the rings sit
+  /** Earlier weeks in the consistency grid and weekly bars (this week is the accent). */
+  past: '#111111',
+  /** Z1–Z5 as drawn (power rays, time in zone). By day the data's orange ramp; after dark, tints of white. */
+  zones: ZONE_COLORS as string[],
   tickOff: '#8D8B85', // empty ring ticks; ≥3:1 on the water pool
   frost: 'rgba(172,214,224,0.42)', // the film's tint over the sky (each phase sets its own)
   frostInk: '#4E5E63',
   white: '#FFFFFF',
   /** What sits on an ink fill (selected meal, + buttons). */
   paper: '#FFFFFF',
-  /** Text and marks on the orange sun or an orange tile: dark in both schemes. */
-  onOrange: '#111111',
+  /** Text and marks on the sun or an accent fill (orange or white): dark in both schemes. */
+  onAccent: '#111111',
   /** The water pool once it clears of the sun's reflection (the rings draw on it). */
   pool: '#FFFFFF',
   /** Waterline glint and its strength. */
@@ -33,15 +42,13 @@ const LIGHT = {
   glintK: 1,
   /** Zero-time power ticks (the data marks them with a grey sentinel). */
   tickZero: '#C4C2BC',
-  /** Z5 as drawn on the background (the data's dark rust disappears on a night sky). */
-  zone5: '#7E260A',
   /** The third ride metric's rule (intensity). */
   metricBar: '#A9A8A3',
   /** Rest-day dot in the consistency grid. */
   dotRest: '#B8B6B0',
   /** Weekly bars: stripes on a past (ink) bar, the current week's wash, future weeks' wash. */
   barStripe: '#3B3A37',
-  orangeWash: 'rgba(255,79,26,0.18)',
+  accentWash: 'rgba(255,79,26,0.18)',
   inkWash: 'rgba(17,17,17,0.10)',
 };
 
@@ -54,25 +61,29 @@ const DARK: Palette = {
   grey2: '#767B84',
   line: '#2A303A',
   tile: 'rgba(238,235,228,0.06)',
-  orange: '#FF4F1A',
-  sun: '#FF4F1A',
-  orangeText: '#FF8A63', // lighter for text on dark
-  peach: '#E58A66',
-  tickOff: '#8A94A2', // ≥3:1 on the night pool
+  // After dark white is the main colour: the accent, the sun (as the moon), and white tints for
+  // the macros and zones. Tints are ≥3:1 on the pool and the dark skies.
+  accent: '#FFFFFF',
+  sun: '#F2EEE6',
+  accentText: '#FFFFFF',
+  carbs: '#BCC5D0',
+  peach: '#8E9AA8', // fat: the dimmest macro tint
+  past: '#A3ACB8',
+  zones: ['#C8D0DA', '#D2D9E2', '#E6E9ED', '#F5F0E6', '#FFFFFF'], // Z1 cool and dim → Z5 bright white
+  tickOff: '#6F7A89', // ≥3:1 on the pool
   frost: 'rgba(120,160,200,0.12)',
   frostInk: '#AEBDC6',
   white: '#FFFFFF',
   paper: '#111111',
-  onOrange: '#111111',
-  pool: '#34485E', // moonlit water: lighter than the frost, dark enough for light rings
+  onAccent: '#111111',
+  pool: '#1E2A38', // deep water, so the white rings read on it
   glint: '#BFD4E8',
   glintK: 0.55,
   tickZero: '#4A505A',
-  zone5: '#E0532A',
   metricBar: '#5D626B',
   dotRest: '#4A505A',
-  barStripe: '#C9C6BF',
-  orangeWash: 'rgba(255,79,26,0.30)',
+  barStripe: '#5E6672', // stripes on a past (grey-white) bar
+  accentWash: 'rgba(255,255,255,0.22)',
   inkWash: 'rgba(238,235,228,0.12)',
 };
 
@@ -103,7 +114,7 @@ export type Sky = Gradient & {
   frost: string;
   veil: string;
   tokens: Partial<Palette>;
-  /** Opacity of the orange halo round the sun after dark. */
+  /** Opacity of the halo round the sun after dark. */
   sunGlow: number;
 };
 export const SKIES: Record<Phase, Sky> = {
@@ -114,16 +125,17 @@ export const SKIES: Record<Phase, Sky> = {
     open: { colors: ['#163241', '#0277BA', '#0A3F62'], positions: [0, 0.55, 1] },
     frost: 'rgba(6,22,34,0.55)',
     veil: 'rgba(10,30,44,0.68)',
-    tokens: { grey: '#D3DEE6', grey2: '#9AB0BF', orangeText: '#FFC4A6', frostInk: '#C4D6E0', tickOff: '#9AAAB8', zone5: '#FF9E70' },
+    tokens: { grey: '#D3DEE6', grey2: '#9AB0BF', frostInk: '#C4D6E0' },
     sunGlow: 0.3,
   },
   day: {
     scheme: 'light',
-    colors: ['#79C1E5', '#C8D3EF', '#FFD990'],
+    // The reference's blue / lavender / gold, lifted close to white so it stays subtle.
+    colors: ['#D3EAF6', '#EEF1F8', '#FFF4DE'],
     positions: [0, 0.5, 1],
-    frost: 'rgba(255,255,255,0.35)',
-    veil: 'rgba(255,255,255,0.25)',
-    tokens: { grey: '#3D4650', grey2: '#5F6872', orangeText: '#7F2508', frostInk: '#36464D' },
+    frost: 'rgba(172,214,224,0.42)',
+    veil: 'rgba(255,255,255,0)',
+    tokens: {},
     sunGlow: 0,
   },
   dusk: {
@@ -133,7 +145,7 @@ export const SKIES: Record<Phase, Sky> = {
     open: { colors: ['#271F2F', '#865AB4', '#3E2C55'], positions: [0, 0.5, 1] },
     frost: 'rgba(24,16,34,0.5)',
     veil: 'rgba(30,22,40,0.55)',
-    tokens: { ink: '#FFFFFF', grey: '#D5CCE0', grey2: '#A796BB', orangeText: '#FFB896', frostInk: '#D8CCE4', zone5: '#FF9E70' },
+    tokens: { ink: '#FFFFFF', grey: '#D5CCE0', grey2: '#A796BB', frostInk: '#D8CCE4' },
     sunGlow: 0.35,
   },
   night: {
@@ -142,11 +154,18 @@ export const SKIES: Record<Phase, Sky> = {
     positions: [0, 0.5, 1],
     frost: 'rgba(120,160,200,0.10)',
     veil: 'rgba(0,0,0,0)',
-    // At night the sun becomes the moon: a warm white disc, a pale halo and a white reflection.
+    // At night the white sun is the moon: a touch warmer, with a paler halo.
     tokens: { grey2: '#7C818A', sun: '#E9E5DA' },
     sunGlow: 0.22,
   },
 };
+
+/** A data colour (the zone ramp or the grey zero-time sentinels) → the colour drawn in this palette. */
+export function zoneColor(c: string, C: Palette) {
+  if (c === '#C4C2BC' || c === '#B4B2AC') return C.tickZero;
+  const i = ZONE_COLORS.indexOf(c);
+  return i >= 0 ? C.zones[i] : c;
+}
 
 /** Local hour → phase: dawn 5–8, day 8–17, dusk 17–20, night 20–5. */
 export function phaseAt(date: Date): Phase {

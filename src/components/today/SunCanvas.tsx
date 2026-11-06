@@ -25,7 +25,7 @@ import {
 import { ZONE_STARTS, type Day, type ZoneLabel } from '@/data/sample';
 import { CX, CY, polar, progress, ramp, sunRadius } from '@/lib/frost';
 import { useTheme } from '@/state/Theme';
-import { type Palette } from '@/theme';
+import { zoneColor } from '@/theme';
 
 interface Props {
   day: Day;
@@ -82,8 +82,8 @@ export function SunCanvas({ day, edge, s, width, height, headBottom, rowTop }: P
           {goalR > 0 && <Circle cx={CX} cy={CY} r={goalR} color={C.white} style="stroke" strokeWidth={2} />}
           {r > 0 && (
             <Group origin={vec(CX, CY)} transform={zoom}>
-              {/* After dark the disc gains a soft halo. At dawn and dusk it stays the orange sun;
-                  at night `sun` turns it into the moon (still sized by the day's kJ). */}
+              {/* After dark the disc turns white (`sun`) and gains a soft halo; at night it reads as
+                  the moon. It is still sized by the day's kJ. */}
               {sky.sunGlow > 0 && (
                 <Circle cx={CX} cy={CY} r={r + 18} color={C.sun} opacity={sky.sunGlow}>
                   <Blur blur={28} />
@@ -96,11 +96,11 @@ export function SunCanvas({ day, edge, s, width, height, headBottom, rowTop }: P
                 <Blur blur={0.8} />
               </Circle>
               {groups.map((g) => (
-                <RayGroup key={g.color} color={rayColor(g.color, C)} ticks={g.ticks} r={r} edge={edge} />
+                <RayGroup key={g.color} color={zoneColor(g.color, C)} ticks={g.ticks} r={r} edge={edge} />
               ))}
-              {font && labels.map((z) => <ZoneText key={z[0]} z={z} font={font} edge={edge} color={C.onOrange} />)}
+              {font && labels.map((z) => <ZoneText key={z[0]} z={z} font={font} edge={edge} color={C.onAccent} />)}
               {separators.marks.map((m) => (
-                <ZoneSeparator key={m.deg} deg={m.deg} lo={separators.lo} hi={separators.hi} edge={edge} color={C.onOrange} />
+                <ZoneSeparator key={m.deg} deg={m.deg} lo={separators.lo} hi={separators.hi} edge={edge} color={C.onAccent} />
               ))}
             </Group>
           )}
@@ -113,10 +113,6 @@ export function SunCanvas({ day, edge, s, width, height, headBottom, rowTop }: P
 type Tick = { deg: number; L: number; color: string };
 
 const GREY = '#C4C2BC'; // zero-time ticks arrive pre-coloured grey at a floor length (a data sentinel)
-const Z5_DATA = '#7E260A';
-
-/** Data colours → drawn colours: the grey sentinel and Z5 follow the scheme. */
-const rayColor = (c: string, C: Palette) => (c === GREY ? C.tickZero : c === Z5_DATA ? C.zone5 : c);
 /** Each 4 W data step is drawn as this many rays (2 W each). */
 const SPLIT = 2;
 /** Zone thresholds on the 2 W scale. */
