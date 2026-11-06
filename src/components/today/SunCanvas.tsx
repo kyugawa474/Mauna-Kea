@@ -24,7 +24,8 @@ import {
 
 import { ZONE_STARTS, type Day, type ZoneLabel } from '@/data/sample';
 import { CX, CY, polar, progress, ramp, sunRadius } from '@/lib/frost';
-import { C } from '@/theme';
+import { useTheme } from '@/state/Theme';
+import { zoneColor } from '@/theme';
 
 interface Props {
   day: Day;
@@ -44,6 +45,7 @@ interface Props {
  */
 export function SunCanvas({ day, edge, s, width, height, headBottom, rowTop }: Props) {
   const r = sunRadius(day.kj);
+  const { C, sky } = useTheme();
   const font = useFont(require('@expo-google-fonts/ibm-plex-mono/400Regular/IBMPlexMono_400Regular.ttf'), 10.5);
 
   // Slow heat-haze on the disc.
@@ -80,18 +82,25 @@ export function SunCanvas({ day, edge, s, width, height, headBottom, rowTop }: P
           {goalR > 0 && <Circle cx={CX} cy={CY} r={goalR} color={C.white} style="stroke" strokeWidth={2} />}
           {r > 0 && (
             <Group origin={vec(CX, CY)} transform={zoom}>
-              <Circle cx={CX} cy={CY} r={r} color={C.orange}>
+              {/* After dark the disc turns white (`sun`) and gains a soft halo; at night it reads as
+                  the moon. It is still sized by the day's kJ. */}
+              {sky.sunGlow > 0 && (
+                <Circle cx={CX} cy={CY} r={r + 18} color={C.sun} opacity={sky.sunGlow}>
+                  <Blur blur={28} />
+                </Circle>
+              )}
+              <Circle cx={CX} cy={CY} r={r} color={C.sun}>
                 <DisplacementMap channelX="r" channelY="g" scale={4}>
                   <FractalNoise freqX={fx} freqY={fy} octaves={2} seed={4} />
                 </DisplacementMap>
                 <Blur blur={0.8} />
               </Circle>
               {groups.map((g) => (
-                <RayGroup key={g.color} color={g.color} ticks={g.ticks} r={r} edge={edge} />
+                <RayGroup key={g.color} color={zoneColor(g.color, C)} ticks={g.ticks} r={r} edge={edge} />
               ))}
-              {font && labels.map((z) => <ZoneText key={z[0]} z={z} font={font} edge={edge} />)}
+              {font && labels.map((z) => <ZoneText key={z[0]} z={z} font={font} edge={edge} color={C.onAccent} />)}
               {separators.marks.map((m) => (
-                <ZoneSeparator key={m.deg} deg={m.deg} lo={separators.lo} hi={separators.hi} edge={edge} />
+                <ZoneSeparator key={m.deg} deg={m.deg} lo={separators.lo} hi={separators.hi} edge={edge} color={C.onAccent} />
               ))}
             </Group>
           )}
@@ -103,7 +112,7 @@ export function SunCanvas({ day, edge, s, width, height, headBottom, rowTop }: P
 
 type Tick = { deg: number; L: number; color: string };
 
-const GREY = '#C4C2BC'; // zero-time ticks arrive pre-coloured grey at a floor length
+const GREY = '#C4C2BC'; // zero-time ticks arrive pre-coloured grey at a floor length (a data sentinel)
 /** Each 4 W data step is drawn as this many rays (2 W each). */
 const SPLIT = 2;
 /** Zone thresholds on the 2 W scale. */
@@ -251,7 +260,7 @@ function zoneSeparators(n: number, labels: ZoneLabel[]) {
 }
 
 /** A short radial tick across the label band. It fades in with the labels, after the rays under it draw. */
-function ZoneSeparator({ deg, lo, hi, edge }: { deg: number; lo: number; hi: number; edge: SharedValue<number> }) {
+function ZoneSeparator({ deg, lo, hi, edge, color }: { deg: number; lo: number; hi: number; edge: SharedValue<number>; color: string }) {
   const path = useMemo(() => {
     const a = polar(lo, deg);
     const b = polar(hi, deg);
@@ -264,10 +273,10 @@ function ZoneSeparator({ deg, lo, hi, edge }: { deg: number; lo: number; hi: num
     const end = 0.47 - 0.004 * (deg / 3.6) - 0.035;
     return ramp(progress(edge.value), end, end - 0.035) * 0.55;
   });
-  return <Path path={path} color={C.ink} style="stroke" strokeWidth={1.2} strokeCap="round" opacity={opacity} />;
+  return <Path path={path} color={color} style="stroke" strokeWidth={1.2} strokeCap="round" opacity={opacity} />;
 }
 
-function ZoneText({ z, font, edge }: { z: ZoneLabel; font: SkFont; edge: SharedValue<number> }) {
+function ZoneText({ z, font, edge, color }: { z: ZoneLabel; font: SkFont; edge: SharedValue<number>; color: string }) {
   const [text, R, a1, a2, sweep] = z;
   const { path, offset, mid } = useMemo(() => {
     const p = Skia.PathBuilder.Make();
@@ -288,5 +297,5 @@ function ZoneText({ z, font, edge }: { z: ZoneLabel; font: SkFont; edge: SharedV
     const end = 0.47 - 0.004 * (mid / 3.6) - 0.035;
     return ramp(progress(edge.value), end, end - 0.035) * 0.9;
   });
-  return <TextPath path={path} text={text} font={font} initialOffset={offset} color={C.ink} opacity={opacity} />;
+  return <TextPath path={path} text={text} font={font} initialOffset={offset} color={color} opacity={opacity} />;
 }

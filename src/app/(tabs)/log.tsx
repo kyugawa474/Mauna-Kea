@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { useApp } from '@/state/AppState';
-import { C } from '@/theme';
+import { useTheme } from '@/state/Theme';
 
 /**
  * Backs the "Log food" button in the tab bar. The tab is `disabled`, so tapping it never lands
@@ -14,6 +14,7 @@ import { C } from '@/theme';
 export default function LogRoute() {
   const focused = useIsFocused();
   const { setAddOpen } = useApp();
+  const { C } = useTheme();
   useEffect(() => {
     if (!focused) return;
     router.replace('/');

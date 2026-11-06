@@ -18,11 +18,13 @@ import { FrostCanvas } from '@/components/today/FrostCanvas';
 import { SunCanvas } from '@/components/today/SunCanvas';
 import { WeekStrip } from '@/components/today/WeekStrip';
 import { AddPanel } from '@/components/AddPanel';
+import { SkyBackdrop } from '@/components/Sky';
 import { DAYS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
 import { CX, CY, EDGE_DOWN, EDGE_REST, EDGE_UP, progress, ramp, snapEdge, sunRadius, waterRadius } from '@/lib/frost';
 import { fmt, useTween } from '@/lib/useTween';
 import { useApp } from '@/state/AppState';
-import { C, DT, F, caps, useLayout, T } from '@/theme';
+import { themed, useTheme } from '@/state/Theme';
+import { DT, F, useLayout, T, type Palette } from '@/theme';
 
 /** The tap region sits between the ride/eat headline and the bottom metrics (design px). */
 const TAP_TOP = 250;
@@ -44,6 +46,8 @@ export default function TodayScreen() {
   const { s, width, height, contentH, headerTop } = useLayout();
   const { dayIndex, setDayIndex, variant, cycleThuPhase, toggleSatDone, totals } = useApp();
   const day = DAYS[variant];
+  const { C, caps, cyclePhase } = useTheme();
+  const styles = useStyles();
 
   // ── the frost edge (design px) and the horizontal day-swipe offset (pt) ──
   const edge = useSharedValue(EDGE_REST);
@@ -208,6 +212,7 @@ export default function TodayScreen() {
     <View style={styles.root} collapsable={false}>
     <GestureDetector gesture={pan}>
       <View style={[styles.screen, { height }]} collapsable={false}>
+        <SkyBackdrop width={width} height={height} open />
         {/* ───────────── base layer: the ride ───────────── */}
         <Animated.View
           style={[StyleSheet.absoluteFill, page]}
@@ -236,16 +241,19 @@ export default function TodayScreen() {
           style={[atHead(HEAD_Y), styles.block, page, rideOut]}
           onLayout={(e) => setHeadBottom((e.nativeEvent.layout.y + e.nativeEvent.layout.height) / s)}
         >
-          <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Ride</Text>
-          <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{fmt(day.kj)}</Text>
+          {/* Long-press the headline to preview the time-of-day phases (dev/design aid). */}
+          <Pressable onLongPress={cyclePhase} delayLongPress={600} style={styles.press} accessibilityHint="Long press to preview the next time-of-day theme">
+            <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Ride</Text>
+            <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{fmt(day.kj)}</Text>
+          </Pressable>
           <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={styles.note}>{day.note}</Text>
         </Animated.View>
 
         {day.ride && (
           <Animated.View style={[at(ROW_Y), { top: rowTop }, styles.grid, page, metricsOut]}>
-            <Metric label="Time" value={day.ride.min} unit=" min" bar={C.ink} />
-            <Metric label="Avg power" value={day.ride.w} unit=" W" bar={C.orange} />
-            <Metric label="Intensity" value={day.ride.pct} unit=" % FTP" bar="#A9A8A3" />
+            <Metric label="Time" value={day.ride.min} unit=" min" bar={C.carbs} />
+            <Metric label="Avg power" value={day.ride.w} unit=" W" bar={C.accent} />
+            <Metric label="Intensity" value={day.ride.pct} unit=" % FTP" bar={C.metricBar} />
           </Animated.View>
         )}
 
@@ -273,16 +281,16 @@ export default function TodayScreen() {
 
             <Animated.View style={[at(FUEL_REST), styles.block, page, fuelMove]}>
               <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Eat</Text>
-              <Text maxFontSizeMultiplier={DT.fixed} style={[styles.big, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
+              <Text maxFontSizeMultiplier={DT.fixed} style={[styles.big, { color: live ? C.accentText : C.ink }]}>{fmt(left)}</Text>
               <View style={styles.baseline}>
                 <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={[styles.note, styles.shrink, { color: C.frostInk }]}>kcal of {fmt(day.of)}</Text>
-                {totals.addedKcal > 0 && <Text maxFontSizeMultiplier={DT.fixed} style={[styles.note, { color: C.orangeText, opacity: live ? 1 : 0 }]}>−{totals.addedKcal}</Text>}
+                {totals.addedKcal > 0 && <Text maxFontSizeMultiplier={DT.fixed} style={[styles.note, { color: C.accentText, opacity: live ? 1 : 0 }]}>−{totals.addedKcal}</Text>}
               </View>
             </Animated.View>
 
             <Animated.View style={[at(ROW_Y), styles.grid, page, macrosMove]}>
-              <Macro label="Carbs" value={sC} goal={day.TC} bar={C.ink} live={live} />
-              <Macro label="Protein" value={sP} goal={day.TP} bar={C.orange} live={live} />
+              <Macro label="Carbs" value={sC} goal={day.TC} bar={C.carbs} live={live} />
+              <Macro label="Protein" value={sP} goal={day.TP} bar={C.accent} live={live} />
               <Macro label="Fat" value={sF} goal={day.TF} bar={C.peach} live={live} />
             </Animated.View>
           </Animated.View>
@@ -313,7 +321,7 @@ export default function TodayScreen() {
 
         {dayIndex !== TODAY_INDEX && (
           <Pressable onPress={() => setDayIndex(TODAY_INDEX)} style={[styles.todayBtn, { top: 44 * s + dy }]} hitSlop={8}>
-            <Text maxFontSizeMultiplier={DT.fixed} style={[caps, { color: C.orangeText }]}>Today</Text>
+            <Text maxFontSizeMultiplier={DT.fixed} style={[caps, { color: C.accentText }]}>Today</Text>
           </Pressable>
         )}
       </View>
@@ -324,10 +332,14 @@ export default function TodayScreen() {
 }
 
 function Header({ label, selected, onSelect, onLongPress }: { label: string; selected: number; onSelect: (i: number) => void; onLongPress?: () => void }) {
+  const { C, caps, override } = useTheme();
   return (
     <View style={{ gap: 6 }}>
       <Pressable onLongPress={onLongPress} delayLongPress={500} style={{ alignSelf: 'flex-start' }}>
-        <Text maxFontSizeMultiplier={DT.fixed} style={[caps, { fontSize: T.label, color: C.grey }]}>{label}</Text>
+        <Text maxFontSizeMultiplier={DT.fixed} style={[caps, { fontSize: T.label, color: C.grey }]}>
+          {label}
+          {override ? ` · ${override} preview` : ''}
+        </Text>
       </Pressable>
       <WeekStrip selected={selected} onSelect={onSelect} />
     </View>
@@ -335,6 +347,8 @@ function Header({ label, selected, onSelect, onLongPress }: { label: string; sel
 }
 
 function Metric({ label, value, unit, bar }: { label: string; value: number; unit: string; bar: string }) {
+  const { caps } = useTheme();
+  const styles = useStyles();
   return (
     <View style={[styles.cell, { borderTopColor: bar }]}>
       <Text maxFontSizeMultiplier={DT.fixed} style={caps}>{label}</Text>
@@ -347,15 +361,17 @@ function Metric({ label, value, unit, bar }: { label: string; value: number; uni
 }
 
 function Macro({ label, value, goal, bar, live }: { label: string; value: number; goal: number; bar: string; live: boolean }) {
+  const { C, caps } = useTheme();
+  const styles = useStyles();
   const g = Math.round(value);
   const over = goal > 0 && g > goal ? g - goal : 0;
   return (
     <View style={[styles.cell, { borderTopColor: bar }]} accessibilityLabel={`${label} ${g} of ${goal} grams${over ? `, ${over} over` : ''}`}>
       <Text maxFontSizeMultiplier={DT.fixed} style={caps}>{label}</Text>
-      <Text maxFontSizeMultiplier={DT.fixed} style={[styles.mid, { color: live || over ? C.orangeText : C.ink }]}>
+      <Text maxFontSizeMultiplier={DT.fixed} style={[styles.mid, { color: live || over ? C.accentText : C.ink }]}>
         {g}
         <Text maxFontSizeMultiplier={DT.fixed} style={[styles.unit, { color: C.frostInk }]}>/{goal}g</Text>
-        {over > 0 && <Text maxFontSizeMultiplier={DT.fixed} style={[styles.unit, { color: C.orangeText }]}> +{over}</Text>}
+        {over > 0 && <Text maxFontSizeMultiplier={DT.fixed} style={[styles.unit, { color: C.accentText }]}> +{over}</Text>}
       </Text>
     </View>
   );
@@ -364,6 +380,8 @@ function Macro({ label, value, goal, bar, live }: { label: string; value: number
 /** Rest day: a dashed ghost of tomorrow's sun, sized to tomorrow's kJ target. */
 function Tomorrow({ day, s, page }: { day: (typeof DAYS)[DayVariant]; s: number; page: ReturnType<typeof useAnimatedStyle> }) {
   const r = sunRadius(day.tgt);
+  const { C, caps } = useTheme();
+  const styles = useStyles();
   return (
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, page]}>
       <View
@@ -390,11 +408,12 @@ function Tomorrow({ day, s, page }: { day: (typeof DAYS)[DayVariant]; s: number;
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themed((C: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   screen: { backgroundColor: C.bg, overflow: 'hidden' },
   filmBox: { position: 'absolute', left: 0, right: 0, bottom: 0, overflow: 'hidden' },
   block: { gap: 6, paddingTop: 12, alignItems: 'center' },
+  press: { gap: 6, alignItems: 'center' },
   baseline: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   big: { fontFamily: F.thin, fontSize: T.display, letterSpacing: -2.2, lineHeight: 56, color: C.ink },
   note: { fontFamily: F.mono, fontSize: T.label, color: C.grey },
@@ -407,4 +426,4 @@ const styles = StyleSheet.create({
   shrink: { flexShrink: 1 },
   hint: { position: 'absolute', paddingHorizontal: 20, left: 0, right: 0, alignItems: 'center', zIndex: 7 },
   hintText: { fontFamily: F.mono, fontSize: T.label, letterSpacing: 1, textTransform: 'uppercase', color: C.frostInk },
-});
+}));

@@ -5,7 +5,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
 import { ZONE_BLOCKS, ZONE_COLORS, ZONE_TICKS } from '@/data/sample';
-import { C, DT, F, caps, useLayout, T } from '@/theme';
+import { useTheme } from '@/state/Theme';
+import { DT, F, useLayout, T, zoneColor, type Palette } from '@/theme';
+
 
 const W = 350;
 /** Vertical stretch on the tick lengths in the data (power peaks at 41, heart rate at 62). */
@@ -30,6 +32,8 @@ const ease = (t: number) => {
  */
 export function ZoneGraph({ width, clock }: { width: number; clock: SharedValue<number> }) {
   const { stackTiles } = useLayout();
+  const { C, caps, scheme } = useTheme();
+  const ink = (dataInk: string) => (scheme === 'dark' ? C.onAccent : dataInk);
   const k = width / W;
   const font = useFont(require('@expo-google-fonts/ibm-plex-mono/400Regular/IBMPlexMono_400Regular.ttf'), 11);
 
@@ -42,10 +46,10 @@ export function ZoneGraph({ width, clock }: { width: number; clock: SharedValue<
               <DashPathEffect intervals={[1, 3]} />
             </Line>
           ))}
-          <TickSet ticks={ZONE_TICKS.up} dir={-1} y={UP_Y} clock={clock} />
-          <TickSet ticks={ZONE_TICKS.dn} dir={1} y={DN_Y} clock={clock} />
+          <TickSet ticks={ZONE_TICKS.up} dir={-1} y={UP_Y} clock={clock} C={C} />
+          <TickSet ticks={ZONE_TICKS.dn} dir={1} y={DN_Y} clock={clock} C={C} />
           {ZONE_COLORS.map((c, z) => (
-            <Line key={c} p1={vec(1 + z * 70, BAR_Y)} p2={vec(69 + z * 70, BAR_Y)} color={c} strokeWidth={3} />
+            <Line key={c} p1={vec(1 + z * 70, BAR_Y)} p2={vec(69 + z * 70, BAR_Y)} color={zoneColor(c, C)} strokeWidth={3} />
           ))}
           {font && (
             <>
@@ -62,14 +66,22 @@ export function ZoneGraph({ width, clock }: { width: number; clock: SharedValue<
 
       <View style={[styles.blocks, stackTiles && { flexDirection: 'column' }]}>
         {ZONE_BLOCKS.map((b) => (
-          <LinearGradient key={b.name} colors={b.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.block}>
-            <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: b.ink }]}>{b.name}</Text>
-            <Text maxFontSizeMultiplier={DT.fixed} style={[styles.hours, { color: b.ink }]}>{b.hours}</Text>
+          // By day the tiles carry the data's zone colours and their own ink; after dark they take the
+          // white tints, so every tile's text is the dark onAccent.
+          <LinearGradient
+            key={b.name}
+            colors={[zoneColor(b.colors[0], C), zoneColor(b.colors[1], C)]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.block}
+          >
+            <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: ink(b.ink) }]}>{b.name}</Text>
+            <Text maxFontSizeMultiplier={DT.fixed} style={[styles.hours, { color: ink(b.ink) }]}>{b.hours}</Text>
             {/* Zone range and HR time on their own lines, so all three tiles wrap the same at 11pt.
                 Full opacity: at 60% the text fell below 4.5:1 on the gradients. */}
             <View style={{ gap: 2 }}>
               {b.sub.split(' · ').map((part) => (
-                <Text key={part} maxFontSizeMultiplier={DT.list} style={[styles.sub, { color: b.ink }]}>{part}</Text>
+                <Text key={part} maxFontSizeMultiplier={DT.list} style={[styles.sub, { color: ink(b.ink) }]}>{part}</Text>
               ))}
             </View>
           </LinearGradient>
@@ -80,7 +92,8 @@ export function ZoneGraph({ width, clock }: { width: number; clock: SharedValue<
   );
 }
 
-function TickSet({ ticks, dir, y, clock }: { ticks: [number, number, string][]; dir: 1 | -1; y: number; clock: SharedValue<number> }) {
+// Rendered inside a Skia Canvas, which is its own React tree: theme context doesn't reach it, so the palette comes in as a prop.
+function TickSet({ ticks, dir, y, clock, C }: { ticks: [number, number, string][]; dir: 1 | -1; y: number; clock: SharedValue<number>; C: Palette }) {
   const byColor = useMemo(() => {
     const m = new Map<string, { i: number; x: number; L: number }[]>();
     ticks.forEach(([x, L, c], i) => {
@@ -92,7 +105,7 @@ function TickSet({ ticks, dir, y, clock }: { ticks: [number, number, string][]; 
   return (
     <>
       {byColor.map(([color, list]) => (
-        <ColorTicks key={color} color={color} list={list} dir={dir} y={y} clock={clock} />
+        <ColorTicks key={color} color={zoneColor(color, C)} list={list} dir={dir} y={y} clock={clock} />
       ))}
     </>
   );

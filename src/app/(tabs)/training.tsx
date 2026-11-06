@@ -4,14 +4,18 @@ import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent, type Native
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 
 import { AddPanel } from '@/components/AddPanel';
+import { SkyBackdrop } from '@/components/Sky';
 import { WeeklyBars } from '@/components/training/WeeklyBars';
 import { ZoneGraph } from '@/components/training/ZoneGraph';
 import { ACTIVITY_LOG, CONSISTENCY, TRAINING_STATS } from '@/data/sample';
 import { fmt, useCountUp } from '@/lib/useTween';
-import { C, DT, F, caps, useLayout, T } from '@/theme';
+import { themed, useTheme } from '@/state/Theme';
+import { DT, F, useLayout, T, type Palette } from '@/theme';
 
 export default function TrainingScreen() {
-  const { width, stackTiles, headerTop, navH } = useLayout();
+  const { width, height, stackTiles, headerTop, navH } = useLayout();
+  const { C, caps, cyclePhase, override } = useTheme();
+  const styles = useStyles();
   const inner = width - 40;
 
   // One clock drives every entrance animation; it restarts each time the tab gains focus.
@@ -57,7 +61,7 @@ export default function TrainingScreen() {
     // The wrapper keeps the ScrollView first in the screen, so the glass bar still tracks its scroll edge.
     <View style={{ flex: 1, backgroundColor: C.bg }} collapsable={false}>
     <ScrollView
-      style={{ flex: 1, backgroundColor: C.bg }}
+      style={{ flex: 1, backgroundColor: 'transparent' }}
       // Content scrolls under the floating tab bar; the last row stops clear of it.
       contentContainerStyle={[styles.page, { paddingTop: headerTop, paddingBottom: navH + 24 }]}
       scrollIndicatorInsets={{ bottom: navH }}
@@ -70,15 +74,20 @@ export default function TrainingScreen() {
       }}
     >
       <View style={{ gap: 6, paddingBottom: 24 }}>
-        <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey }]}>Thu · Oct 22</Text>
-        <Text maxFontSizeMultiplier={DT.fixed} style={styles.h1}>Training</Text>
+        <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey }]}>
+          Thu · Oct 22{override ? ` · ${override} preview` : ''}
+        </Text>
+        {/* Long-press the title to preview the time-of-day phases (dev/design aid). */}
+        <Text maxFontSizeMultiplier={DT.fixed} style={styles.h1} onLongPress={cyclePhase} accessibilityHint="Long press to preview the next time-of-day theme">
+          Training
+        </Text>
       </View>
 
       <Section title="Consistency" right="12 weeks">
         <Consistency clock={clock} width={inner} />
       </Section>
 
-      <Section title="Weekly kJ" right="— target" rightColor={C.orangeText}>
+      <Section title="Weekly kJ" right="— target" rightColor={C.accentText}>
         <View style={styles.baseline}>
           <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{fmt(kjWeek)}</Text>
           <Text maxFontSizeMultiplier={DT.list} style={[styles.note, { flexShrink: 1 }]}>/ {fmt(TRAINING_STATS.weekTarget)} kJ this week</Text>
@@ -123,6 +132,10 @@ export default function TrainingScreen() {
         </View>
       ))}
     </ScrollView>
+    {/* Behind the list (zIndex), but after it in the tree so the ScrollView stays the screen's first child. */}
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { zIndex: -1 }]}>
+      <SkyBackdrop width={width} height={height} veil />
+    </View>
     <AddPanel />
     </View>
   );
@@ -131,7 +144,7 @@ export default function TrainingScreen() {
 function Section({
   title,
   right,
-  rightColor = C.grey,
+  rightColor,
   onLayout,
   children,
 }: {
@@ -141,11 +154,13 @@ function Section({
   onLayout?: (e: LayoutChangeEvent) => void;
   children: React.ReactNode;
 }) {
+  const { C, caps } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.section} onLayout={onLayout}>
       <View style={styles.sectionHead}>
         <Text maxFontSizeMultiplier={DT.list} style={caps}>{title}</Text>
-        <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: rightColor }]}>{right}</Text>
+        <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: rightColor ?? C.grey }]}>{right}</Text>
       </View>
       {children}
     </View>
@@ -153,12 +168,14 @@ function Section({
 }
 
 function Stat({ label, value, unit, hot }: { label: string; value: string; unit: string; hot?: boolean }) {
+  const { C, caps } = useTheme();
+  const styles = useStyles();
   return (
-    <View style={[styles.stat, { backgroundColor: hot ? C.orange : C.tile }]}>
-      <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: hot ? C.ink : C.grey }]}>{label}</Text>
+    <View style={[styles.stat, { backgroundColor: hot ? C.accent : C.tile }]}>
+      <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: hot ? C.onAccent : C.grey }]}>{label}</Text>
       <View style={[styles.baseline, { gap: 3 }]}>
-        <Text maxFontSizeMultiplier={DT.fixed} style={styles.statNum}>{value}</Text>
-        <Text maxFontSizeMultiplier={DT.list} style={[styles.note, { color: hot ? C.ink : C.grey }]}>{unit}</Text>
+        <Text maxFontSizeMultiplier={DT.fixed} style={[styles.statNum, hot && { color: C.onAccent }]}>{value}</Text>
+        <Text maxFontSizeMultiplier={DT.list} style={[styles.note, { color: hot ? C.onAccent : C.grey }]}>{unit}</Text>
       </View>
     </View>
   );
@@ -167,9 +184,11 @@ function Stat({ label, value, unit, hot }: { label: string; value: string; unit:
 const ROW_LABELS = ['M', '', 'W', '', 'F', '', 'S'];
 
 function Consistency({ clock, width }: { clock: SharedValue<number>; width: number }) {
+  const { C } = useTheme();
+  const styles = useStyles();
   return (
     <View style={{ gap: 16 }}>
-      <View style={{ flexDirection: 'row', gap: 4 }} accessibilityLabel="Rides and other sessions over the last 12 weeks; this week in orange">
+      <View style={{ flexDirection: 'row', gap: 4 }} accessibilityLabel="Rides and other sessions over the last 12 weeks; this week highlighted">
         <View style={{ width: 14, gap: 4 }}>
           {ROW_LABELS.map((l, i) => (
             <Text key={i} maxFontSizeMultiplier={DT.strip} style={styles.rowLabel}>{l}</Text>
@@ -189,15 +208,15 @@ function Consistency({ clock, width }: { clock: SharedValue<number>; width: numb
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 8 }}>
         <View style={styles.legend}>
-          <View style={{ width: 15, height: 15, borderRadius: 7.5, backgroundColor: C.ink }} />
+          <View style={{ width: 15, height: 15, borderRadius: 7.5, backgroundColor: C.past }} />
           <Text maxFontSizeMultiplier={DT.list} style={styles.note}>Ride</Text>
         </View>
         <View style={styles.legend}>
-          <View style={{ width: 13, height: 13, borderRadius: 6.5, borderWidth: 1.6, borderColor: C.ink }} />
+          <View style={{ width: 13, height: 13, borderRadius: 6.5, borderWidth: 1.6, borderColor: C.past }} />
           <Text maxFontSizeMultiplier={DT.list} style={styles.note}>Other activity</Text>
         </View>
         <View style={styles.legend}>
-          <View style={{ width: 15, height: 15, borderRadius: 7.5, backgroundColor: C.orange }} />
+          <View style={{ width: 15, height: 15, borderRadius: 7.5, backgroundColor: C.accent }} />
           <Text maxFontSizeMultiplier={DT.list} style={styles.note}>This week</Text>
         </View>
       </View>
@@ -206,8 +225,10 @@ function Consistency({ clock, width }: { clock: SharedValue<number>; width: numb
 }
 
 function Dot({ kind, now, delay, clock }: { kind: string; now: boolean; delay: number; clock: SharedValue<number> }) {
-  // Orange means "now": this week's sessions are orange, earlier weeks ink.
-  const col = now ? C.orange : C.ink;
+  const { C } = useTheme();
+  const styles = useStyles();
+  // The accent means "now": this week's sessions are the accent (orange by day, white after dark).
+  const col = now ? C.accent : C.past;
   const today = kind.endsWith('!');
   const k = kind.replace('!', '');
   const st = useAnimatedStyle(() => {
@@ -229,23 +250,24 @@ function Dot({ kind, now, delay, clock }: { kind: string; now: boolean; delay: n
         </>
       )}
       {(k === 'rest' || k === 'future') && (
-        <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: k === 'rest' ? '#B8B6B0' : C.line }} />
+        <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: k === 'rest' ? C.dotRest : C.line }} />
       )}
     </Animated.View>
   );
 }
 
 function ActivityIcon({ kind }: { kind: string }) {
+  const { C } = useTheme();
   return (
     <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-      {kind === 'ride' && <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: C.orange }} />}
-      {kind === 'other' && <View style={{ width: 13, height: 13, borderRadius: 6.5, borderWidth: 1.5, borderColor: C.orange }} />}
+      {kind === 'ride' && <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: C.accent }} />}
+      {kind === 'other' && <View style={{ width: 13, height: 13, borderRadius: 6.5, borderWidth: 1.5, borderColor: C.accent }} />}
       {kind === 'skipped' && <View style={{ width: 13, height: 13, borderRadius: 6.5, borderWidth: 1.2, borderColor: C.grey2, borderStyle: 'dashed' }} />}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themed((C: Palette) => StyleSheet.create({
   page: { paddingTop: 56, paddingHorizontal: 20, paddingBottom: 40 },
   h1: { fontFamily: F.semibold, fontSize: T.head, letterSpacing: -1.2, lineHeight: 40, color: C.ink },
   section: {
@@ -274,4 +296,4 @@ const styles = StyleSheet.create({
   },
   logName: { fontFamily: F.medium, fontSize: T.body, color: C.ink },
   logKj: { fontFamily: F.light, fontSize: T.mid, letterSpacing: -0.4, color: C.ink },
-});
+}));

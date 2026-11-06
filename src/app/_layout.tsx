@@ -14,7 +14,7 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AppStateProvider } from '@/state/AppState';
-import { C } from '@/theme';
+import { ThemeProvider, useTheme } from '@/state/Theme';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -26,12 +26,21 @@ export default function RootLayout() {
     IBMPlexMono_500Medium,
   });
 
+  return (
+    <ThemeProvider>
+      <Root loaded={loaded} />
+    </ThemeProvider>
+  );
+}
+
+function Root({ loaded }: { loaded: boolean }) {
+  const { C, scheme } = useTheme();
   if (!loaded) return <View style={{ flex: 1, backgroundColor: C.bg }} />;
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.bg }}>
       <AppStateProvider>
-        <StatusBar style="dark" />
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg } }} />
       </AppStateProvider>
     </GestureHandlerRootView>
