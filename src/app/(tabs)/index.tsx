@@ -27,6 +27,13 @@ import { C, DT, F, caps, useLayout, T } from '@/theme';
 const TAP_TOP = 250;
 const TAP_BOTTOM = 640;
 
+/** At rest the fuel headline sits at the foot of the frost, mirroring the ride headline at the top (design px). */
+const FUEL_REST = 626;
+/** The ride headline's spot; swiping up carries the fuel headline here. */
+const HEAD_Y = 133;
+/** Where the macro (and ride metric) row sits once revealed. */
+const ROW_Y = 654;
+
 /** The gesture hint shows until the first vertical drag (per app session; nothing is persisted yet). */
 let hintDismissed = false;
 
@@ -160,8 +167,6 @@ export default function TodayScreen() {
   const rideOut = useAnimatedStyle(() => ({ opacity: 1 - ramp(progress(edge.value), 0.5, 0.85) }));
   const hdrOut = useAnimatedStyle(() => ({ opacity: 1 - ramp(progress(edge.value), 0.8, 0.96) }));
   const metricsOut = useAnimatedStyle(() => ({ opacity: 1 - ramp(progress(edge.value), 0, 0.3) }));
-  // The rest-state fuel line hands over to the "Eat" headline as the frost rises.
-  const fuelOut = useAnimatedStyle(() => ({ opacity: 1 - ramp(progress(edge.value), 0.55, 0.72) }));
   // The hint rides the waterline and fades as soon as the frost leaves rest.
   const hintStyle = useAnimatedStyle(() => ({
     top: (edge.value + 14) * s,
@@ -175,6 +180,18 @@ export default function TodayScreen() {
   // The header block moves down as one piece so it clears the status bar; the sun and frost stay put.
   const dy = headerTop - 56 * s;
   const atHead = (y: number) => ({ ...at(y), top: y * s + dy });
+
+  // The fuel headline mirrors the ride one: it rests at the foot of the frost and swiping up carries
+  // it to the ride headline's spot. Pulled down, it leaves with the frost. The macro row follows it
+  // up from below the screen and stops where the ride metrics sit.
+  const headTop = HEAD_Y * s + dy;
+  const restTop = FUEL_REST * s;
+  const fuelTopAt = (e: number) => {
+    'worklet';
+    return e >= EDGE_REST ? restTop + (e - EDGE_REST) * s : headTop + (restTop - headTop) * (e / EDGE_REST);
+  };
+  const fuelMove = useAnimatedStyle(() => ({ top: fuelTopAt(edge.value) }));
+  const macrosMove = useAnimatedStyle(() => ({ top: Math.max(ROW_Y * s, fuelTopAt(edge.value) + 140 * s) }));
 
   return (
     <GestureDetector gesture={pan}>
@@ -203,14 +220,14 @@ export default function TodayScreen() {
           <Header label={day.label} selected={dayIndex} onSelect={setDayIndex} onLongPress={dayIndex === 3 ? cycleThuPhase : undefined} />
         </Animated.View>
 
-        <Animated.View style={[atHead(133), styles.block, page, rideOut]}>
+        <Animated.View style={[atHead(HEAD_Y), styles.block, page, rideOut]}>
           <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Ride</Text>
           <BigNumber value={fmt(day.kj)} note={day.note} />
           {day.kj > 0 && <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={styles.note}>≈ {fmt(day.kj)} kcal burned · 1 kJ of work ≈ 1 kcal</Text>}
         </Animated.View>
 
         {day.ride && (
-          <Animated.View style={[at(654), styles.grid, page, metricsOut]}>
+          <Animated.View style={[at(ROW_Y), styles.grid, page, metricsOut]}>
             <Metric label="Time" value={day.ride.min} unit=" min" sub="moving" bar={C.ink} />
             <Metric label="Avg power" value={day.ride.w} unit=" W" sub={`${day.ride.wkg} W/kg`} bar={C.orange} />
             <Metric label="Intensity" value={day.ride.pct} unit=" % FTP" sub={day.ride.zone} bar="#A9A8A3" />
@@ -238,7 +255,7 @@ export default function TodayScreen() {
               <Header label={day.label} selected={dayIndex} onSelect={setDayIndex} onLongPress={dayIndex === 3 ? cycleThuPhase : undefined} />
             </View>
 
-            <Animated.View style={[atHead(133), styles.block, page]}>
+            <Animated.View style={[at(FUEL_REST), styles.block, page, fuelMove]}>
               <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Eat</Text>
               <View style={styles.baseline}>
                 <Text maxFontSizeMultiplier={DT.fixed} style={[styles.big, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
@@ -247,12 +264,7 @@ export default function TodayScreen() {
               </View>
             </Animated.View>
 
-            <Animated.View style={[at(586), styles.baseline, page, fuelOut]}>
-              <Text maxFontSizeMultiplier={DT.fixed} style={[styles.fuelBig, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
-              <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={[styles.note, styles.shrink, { color: C.frostInk }]}>kcal left of {fmt(day.of)}</Text>
-            </Animated.View>
-
-            <Animated.View style={[at(654), styles.grid, page]}>
+            <Animated.View style={[at(ROW_Y), styles.grid, page, macrosMove]}>
               <Macro label="Carbs" value={sC} goal={day.TC} bar={C.ink} live={live} />
               <Macro label="Protein" value={sP} goal={day.TP} bar={C.orange} live={live} />
               <Macro label="Fat" value={sF} goal={day.TF} bar={C.peach} live={live} />
@@ -383,7 +395,6 @@ const styles = StyleSheet.create({
   unit: { fontFamily: F.mono, fontSize: T.label, color: C.grey },
   sep: { position: 'absolute', height: 1, backgroundColor: C.ink, zIndex: 6 },
   todayBtn: { position: 'absolute', right: 8, padding: 12, zIndex: 40 },
-  fuelBig: { fontFamily: F.thin, fontSize: T.head, letterSpacing: -1.4, lineHeight: 40, color: C.ink },
   shrink: { flexShrink: 1 },
   hint: { position: 'absolute', paddingHorizontal: 20, left: 0, right: 0, alignItems: 'center', zIndex: 7 },
   hintText: { fontFamily: F.mono, fontSize: T.label, letterSpacing: 1, textTransform: 'uppercase', color: C.frostInk },
