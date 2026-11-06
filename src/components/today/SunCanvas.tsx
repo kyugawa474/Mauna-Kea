@@ -9,6 +9,7 @@ import {
   Skia,
   TextPath,
   useFont,
+  vec,
   type SkFont,
 } from '@shopify/react-native-skia';
 import { useEffect, useMemo } from 'react';
@@ -31,13 +32,15 @@ interface Props {
   s: number;
   width: number;
   height: number;
+  /** Bottom of the Ride headline (design px), measured on screen; the pulled-down sun stays below it. */
+  headBottom: number;
 }
 
 /**
  * Base layer: the sun. Its area is the kJ burned today; pulling the frost down
  * draws power rays clockwise (2 W each, 0–400 W; Z5 at 6 W), ray length = time spent at that power.
  */
-export function SunCanvas({ day, edge, s, width, height }: Props) {
+export function SunCanvas({ day, edge, s, width, height, headBottom }: Props) {
   const r = sunRadius(day.kj);
   const font = useFont(require('@expo-google-fonts/ibm-plex-mono/400Regular/IBMPlexMono_400Regular.ttf'), 10.5);
 
@@ -57,6 +60,12 @@ export function SunCanvas({ day, edge, s, width, height }: Props) {
   const labels = useMemo(() => (font ? zoneLabels(scale.n, day.zoneLabels, font) : []), [scale, day.zoneLabels, font]);
   const separators = useMemo(() => zoneSeparators(scale.n, labels), [scale, labels]);
 
+  // A long ride's sun is big (1,300 kJ fills 350 of the 390 px frame), so once its rays are out they
+  // would run off the sides and up into the headline. Pulling down zooms the drawing just enough to
+  // fit; at rest the sun stays area-true. Ordinary days already fit, so they don't zoom.
+  const fit = useMemo(() => fitScale(scale.ticks, r, headBottom + 8), [scale, r, headBottom]);
+  const zoom = useDerivedValue(() => [{ scale: 1 + (fit - 1) * ramp(progress(edge.value), 0.5, 0.15) }]);
+
   // A day with a goal but no riding yet (a planned day, or today before the ride) shows the goal as
   // a white outline the size the sun will reach at that many kJ.
   const goalR = day.kj === 0 ? sunRadius(day.tgt) : 0;
@@ -68,7 +77,7 @@ export function SunCanvas({ day, edge, s, width, height }: Props) {
         <Group clip={clip}>
           {goalR > 0 && <Circle cx={CX} cy={CY} r={goalR} color={C.white} style="stroke" strokeWidth={2} />}
           {r > 0 && (
-            <>
+            <Group origin={vec(CX, CY)} transform={zoom}>
               <Circle cx={CX} cy={CY} r={r} color={C.orange}>
                 <DisplacementMap channelX="r" channelY="g" scale={4}>
                   <FractalNoise freqX={fx} freqY={fy} octaves={2} seed={4} />
@@ -82,7 +91,7 @@ export function SunCanvas({ day, edge, s, width, height }: Props) {
               {separators.marks.map((m) => (
                 <ZoneSeparator key={m.deg} deg={m.deg} lo={separators.lo} hi={separators.hi} edge={edge} />
               ))}
-            </>
+            </Group>
           )}
         </Group>
       </Group>
@@ -101,6 +110,29 @@ const Z5 = STARTS[STARTS.length - 1];
 /** Z5 rays are merged three at a time (6 W each) so its thin tail doesn't take a third of the sun. */
 const Z5_MERGE = 3;
 const ZONE_NAMES = ['RECOVERY', 'ENDURANCE', 'TEMPO', 'THRESHOLD', 'VO2+'];
+/** Length of the longest ray (design px). */
+const RAY_MAX = 40;
+/** Where the pulled-down sun must fit (design px): side margins and the top of the ride metrics row. */
+const FIT_LEFT = 8;
+const FIT_RIGHT = 382;
+const FIT_BOTTOM = 644;
+
+/**
+ * The largest zoom (≤ 1, about the sun's centre) that keeps every ray tip inside the frame: clear of
+ * the screen sides, below `top` and above the ride metrics. Zone labels sit inside the disc, so the
+ * ray tips are the outermost marks.
+ */
+function fitScale(ticks: Tick[], r: number, top: number) {
+  let z = 1;
+  for (const { deg, L } of ticks) {
+    const { x, y } = polar(r + 9 + L, deg);
+    if (x < CX) z = Math.min(z, (CX - FIT_LEFT) / (CX - x));
+    if (x > CX) z = Math.min(z, (FIT_RIGHT - CX) / (x - CX));
+    if (y < CY) z = Math.min(z, (CY - top) / (CY - y));
+    if (y > CY) z = Math.min(z, (FIT_BOTTOM - CY) / (y - CY));
+  }
+  return Math.max(0.5, z);
+}
 
 /**
  * Split each 4 W step into two 2 W rays. Each half leans a quarter of the way toward its neighbour
@@ -135,8 +167,16 @@ function buildScale(data: [number, string][]) {
     // Grey (no-time) steps count as zero; keep the data's 2.5px floor so a sliver of time stays visible.
     merged.push(live.length ? [Math.max(avg, 2.5), live[0][1]] : [group[0][0], GREY]);
   }
+  // Ray length is share of ride time: the most-used power step is always RAY_MAX long, so a four-hour
+  // ride and a one-hour one draw at the same size and differ only in shape.
+  const longest = Math.max(0, ...merged.filter(([, c]) => c !== GREY).map(([L]) => L));
+  const k = longest > 0 ? RAY_MAX / longest : 1;
   const n = merged.length;
-  const ticks: Tick[] = merged.map(([L, color], k) => ({ deg: (k * 360) / n, L, color }));
+  const ticks: Tick[] = merged.map(([L, color], i) => ({
+    deg: (i * 360) / n,
+    L: color === GREY ? L : Math.max(2.5, L * k),
+    color,
+  }));
   return { n, ticks };
 }
 

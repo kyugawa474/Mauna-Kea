@@ -39,7 +39,7 @@ let hintDismissed = false;
 
 export default function TodayScreen() {
   const { s, width, contentH, headerTop } = useLayout();
-  const { dayIndex, setDayIndex, variant, cycleThuPhase, totals } = useApp();
+  const { dayIndex, setDayIndex, variant, cycleThuPhase, toggleSatDone, totals } = useApp();
   const day = DAYS[variant];
 
   // ── the frost edge (design px) and the horizontal day-swipe offset (pt) ──
@@ -66,6 +66,12 @@ export default function TodayScreen() {
       ),
     );
   }, [edge]);
+
+  // Long-pressing the date label steps through sample states: Thursday's ride phases, Saturday done/planned.
+  const longPress = dayIndex === 3 ? cycleThuPhase : dayIndex === 5 ? toggleSatDone : undefined;
+
+  // Bottom of the Ride headline in design px; the pulled-down sun zooms to stay below it.
+  const [headBottom, setHeadBottom] = useState(250);
 
   const changeDay = (dir: number) => {
     setDayIndex(dayIndex + dir);
@@ -211,16 +217,19 @@ export default function TodayScreen() {
             goTo(up ? (mode === EDGE_DOWN ? EDGE_REST : EDGE_UP) : mode === EDGE_UP ? EDGE_REST : EDGE_DOWN);
           }}
         >
-          <SunCanvas day={day} edge={edge} s={s} width={width} height={contentH} />
+          <SunCanvas day={day} edge={edge} s={s} width={width} height={contentH} headBottom={headBottom} />
         </Animated.View>
 
         {tomorrow && tomorrow.tgt > 0 && <Tomorrow day={tomorrow} s={s} page={page} />}
 
         <Animated.View style={[atHead(56), hdrOut]}>
-          <Header label={day.label} selected={dayIndex} onSelect={setDayIndex} onLongPress={dayIndex === 3 ? cycleThuPhase : undefined} />
+          <Header label={day.label} selected={dayIndex} onSelect={setDayIndex} onLongPress={longPress} />
         </Animated.View>
 
-        <Animated.View style={[atHead(HEAD_Y), styles.block, page, rideOut]}>
+        <Animated.View
+          style={[atHead(HEAD_Y), styles.block, page, rideOut]}
+          onLayout={(e) => setHeadBottom((e.nativeEvent.layout.y + e.nativeEvent.layout.height) / s)}
+        >
           <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Ride</Text>
           <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{fmt(day.kj)}</Text>
           <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={styles.note}>{day.note}</Text>
@@ -253,7 +262,7 @@ export default function TodayScreen() {
             </View>
 
             <View style={atHead(56)}>
-              <Header label={day.label} selected={dayIndex} onSelect={setDayIndex} onLongPress={dayIndex === 3 ? cycleThuPhase : undefined} />
+              <Header label={day.label} selected={dayIndex} onSelect={setDayIndex} onLongPress={longPress} />
             </View>
 
             <Animated.View style={[at(FUEL_REST), styles.block, page, fuelMove]}>
