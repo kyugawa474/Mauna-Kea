@@ -43,6 +43,10 @@ export default function TrainingScreen() {
         <Text maxFontSizeMultiplier={DT.fixed} style={styles.h1}>Training</Text>
       </View>
 
+      <Section title="Consistency" right="12 weeks">
+        <Consistency clock={clock} width={inner} />
+      </Section>
+
       <Section title="Weekly kJ" right="— target" rightColor={C.orangeText}>
         <View style={styles.baseline}>
           <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{fmt(kjWeek)}</Text>
@@ -58,10 +62,6 @@ export default function TrainingScreen() {
 
       <Section title="Time in zone" right="Last 8 weeks · 41h">
         <ZoneGraph width={inner} clock={clock} />
-      </Section>
-
-      <Section title="Consistency" right="12 weeks">
-        <Consistency clock={clock} width={inner} />
       </Section>
 
       <View style={[styles.logHead]}>
@@ -139,15 +139,15 @@ function Consistency({ clock, width }: { clock: SharedValue<number>; width: numb
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 8 }}>
         <View style={styles.legend}>
-          <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: C.ink }} />
+          <View style={{ width: 15, height: 15, borderRadius: 7.5, backgroundColor: C.ink }} />
           <Text maxFontSizeMultiplier={DT.list} style={styles.note}>Ride</Text>
         </View>
         <View style={styles.legend}>
-          <View style={{ width: 11, height: 11, borderRadius: 6, borderWidth: 1.5, borderColor: C.ink }} />
+          <View style={{ width: 13, height: 13, borderRadius: 6.5, borderWidth: 1.6, borderColor: C.ink }} />
           <Text maxFontSizeMultiplier={DT.list} style={styles.note}>Other activity</Text>
         </View>
         <View style={styles.legend}>
-          <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: C.orange }} />
+          <View style={{ width: 15, height: 15, borderRadius: 7.5, backgroundColor: C.orange }} />
           <Text maxFontSizeMultiplier={DT.list} style={styles.note}>This week</Text>
         </View>
       </View>
@@ -169,17 +169,17 @@ function Dot({ kind, now, delay, clock }: { kind: string; now: boolean; delay: n
   });
   return (
     <Animated.View style={[styles.cellBox, st]}>
-      {today && <View style={[styles.ring, { width: 14.6, height: 14.6, borderRadius: 7.3, borderColor: C.ink, borderWidth: 1.1 }]} />}
-      {k === 'ride' && <View style={{ width: 11, height: 11, borderRadius: 5.5, backgroundColor: col }} />}
-      {k === 'other' && <View style={[styles.ring, { width: 9.5, height: 9.5, borderRadius: 4.75, borderColor: col, borderWidth: 1.5 }]} />}
+      {today && <View style={[styles.ring, { width: 21, height: 21, borderRadius: 10.5, borderColor: C.ink, borderWidth: 1.2 }]} />}
+      {k === 'ride' && <View style={{ width: 15, height: 15, borderRadius: 7.5, backgroundColor: col }} />}
+      {k === 'other' && <View style={[styles.ring, { width: 13, height: 13, borderRadius: 6.5, borderColor: col, borderWidth: 1.6 }]} />}
       {k === 'both' && (
         <>
-          <View style={[styles.ring, { width: 13.6, height: 13.6, borderRadius: 6.8, borderColor: col, borderWidth: 1.5 }]} />
-          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: col }} />
+          <View style={[styles.ring, { width: 18, height: 18, borderRadius: 9, borderColor: col, borderWidth: 1.6 }]} />
+          <View style={{ width: 10.5, height: 10.5, borderRadius: 5.25, backgroundColor: col }} />
         </>
       )}
       {(k === 'rest' || k === 'future') && (
-        <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: k === 'rest' ? '#B8B6B0' : C.line }} />
+        <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: k === 'rest' ? '#B8B6B0' : C.line }} />
       )}
     </Animated.View>
   );
