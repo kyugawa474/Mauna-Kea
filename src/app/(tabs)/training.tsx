@@ -87,7 +87,7 @@ export default function TrainingScreen() {
         <Consistency clock={clock} width={inner} />
       </Section>
 
-      <Section title="Weekly kJ" right="— target" rightColor={C.accentText}>
+      <Section title="Weekly kJ">
         <View style={styles.baseline}>
           <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{fmt(kjWeek)}</Text>
           <Text maxFontSizeMultiplier={DT.list} style={[styles.note, { flexShrink: 1 }]}>/ {fmt(TRAINING_STATS.weekTarget)} kJ this week</Text>
@@ -144,13 +144,11 @@ export default function TrainingScreen() {
 function Section({
   title,
   right,
-  rightColor,
   onLayout,
   children,
 }: {
   title: string;
-  right: string;
-  rightColor?: string;
+  right?: string;
   onLayout?: (e: LayoutChangeEvent) => void;
   children: React.ReactNode;
 }) {
@@ -160,7 +158,7 @@ function Section({
     <View style={styles.section} onLayout={onLayout}>
       <View style={styles.sectionHead}>
         <Text maxFontSizeMultiplier={DT.list} style={caps}>{title}</Text>
-        <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: rightColor ?? C.grey }]}>{right}</Text>
+        {right && <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: C.grey }]}>{right}</Text>}
       </View>
       {children}
     </View>
