@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 
 import { AddPanel } from '@/components/AddPanel';
@@ -17,12 +17,37 @@ export default function TrainingScreen() {
   // One clock drives every entrance animation; it restarts each time the tab gains focus.
   const clock = useSharedValue(0);
   const [visit, setVisit] = useState(0);
+
+  // The time-in-zone graph sits below the fold, so it has its own clock that starts when a third
+  // of the graph has scrolled into view (above the floating tab bar), once per visit.
+  const zoneClock = useSharedValue(0);
+  const zoneShown = useRef(false);
+  const zoneBox = useRef({ y: 0, h: 0 });
+  const viewH = useRef(0);
+  const scrollY = useRef(0);
+  const revealZones = useCallback(() => {
+    const { y, h } = zoneBox.current;
+    if (zoneShown.current || !h || !viewH.current) return;
+    if (scrollY.current + viewH.current - navH < y + h / 3) return;
+    zoneShown.current = true;
+    // Start at 350 so the first ticks begin almost at once (they are staggered from 450).
+    zoneClock.set(350);
+    zoneClock.set(withTiming(3000, { duration: 2650, easing: Easing.linear }));
+  }, [navH, zoneClock]);
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollY.current = e.nativeEvent.contentOffset.y;
+    revealZones();
+  };
+
   useFocusEffect(
     useCallback(() => {
       clock.set(0);
       clock.set(withTiming(3000, { duration: 3000, easing: Easing.linear }));
+      zoneClock.set(0);
+      zoneShown.current = false;
+      revealZones();
       setVisit((v) => v + 1);
-    }, [clock]),
+    }, [clock, zoneClock, revealZones]),
   );
 
   const kjWeek = useCountUp(TRAINING_STATS.thisWeek, visit);
@@ -37,6 +62,12 @@ export default function TrainingScreen() {
       contentContainerStyle={[styles.page, { paddingTop: headerTop, paddingBottom: navH + 24 }]}
       scrollIndicatorInsets={{ bottom: navH }}
       showsVerticalScrollIndicator={false}
+      onScroll={onScroll}
+      scrollEventThrottle={32}
+      onLayout={(e: LayoutChangeEvent) => {
+        viewH.current = e.nativeEvent.layout.height;
+        revealZones();
+      }}
     >
       <View style={{ gap: 6, paddingBottom: 24 }}>
         <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey }]}>Thu · Oct 22</Text>
@@ -60,8 +91,15 @@ export default function TrainingScreen() {
         </View>
       </Section>
 
-      <Section title="Time in zone" right="Last 8 weeks · 41h">
-        <ZoneGraph width={inner} clock={clock} />
+      <Section
+        title="Time in zone"
+        right="Last 8 weeks · 41h"
+        onLayout={(e) => {
+          zoneBox.current = { y: e.nativeEvent.layout.y, h: e.nativeEvent.layout.height };
+          revealZones();
+        }}
+      >
+        <ZoneGraph width={inner} clock={zoneClock} />
       </Section>
 
       <View style={[styles.logHead]}>
@@ -90,9 +128,21 @@ export default function TrainingScreen() {
   );
 }
 
-function Section({ title, right, rightColor = C.grey, children }: { title: string; right: string; rightColor?: string; children: React.ReactNode }) {
+function Section({
+  title,
+  right,
+  rightColor = C.grey,
+  onLayout,
+  children,
+}: {
+  title: string;
+  right: string;
+  rightColor?: string;
+  onLayout?: (e: LayoutChangeEvent) => void;
+  children: React.ReactNode;
+}) {
   return (
-    <View style={styles.section}>
+    <View style={styles.section} onLayout={onLayout}>
       <View style={styles.sectionHead}>
         <Text maxFontSizeMultiplier={DT.list} style={caps}>{title}</Text>
         <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: rightColor }]}>{right}</Text>
