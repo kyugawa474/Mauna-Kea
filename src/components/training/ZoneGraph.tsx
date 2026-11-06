@@ -8,9 +8,15 @@ import { ZONE_BLOCKS, ZONE_COLORS, ZONE_TICKS } from '@/data/sample';
 import { C, DT, F, caps, useLayout, T } from '@/theme';
 
 const W = 350;
-const H = 188;
-const UP_Y = 82;
-const DN_Y = 118;
+/** Vertical stretch on the tick lengths in the data (power peaks at 41, heart rate at 62). */
+const V = 1.75;
+/** Baseline of the power ticks (they grow up from here); the zone bar and Z labels sit just below. */
+const UP_Y = 16 + 41.2 * V + 4;
+const BAR_Y = UP_Y + 8;
+const ZLABEL_Y = UP_Y + 22;
+/** Baseline of the heart-rate ticks (they grow down from here). */
+const DN_Y = UP_Y + 36;
+const H = DN_Y + 62 * V + 20;
 
 const ease = (t: number) => {
   'worklet';
@@ -32,23 +38,23 @@ export function ZoneGraph({ width, clock }: { width: number; clock: SharedValue<
       <Canvas style={{ width, height: H * k }}>
         <Group transform={[{ scale: k }]}>
           {[70, 140, 210, 280].map((x) => (
-            <Line key={x} p1={vec(x, 18)} p2={vec(x, 182)} color={C.ink} strokeWidth={0.6} opacity={0.4}>
+            <Line key={x} p1={vec(x, 18)} p2={vec(x, H - 6)} color={C.ink} strokeWidth={0.6} opacity={0.4}>
               <DashPathEffect intervals={[1, 3]} />
             </Line>
           ))}
           <TickSet ticks={ZONE_TICKS.up} dir={-1} y={UP_Y} clock={clock} />
           <TickSet ticks={ZONE_TICKS.dn} dir={1} y={DN_Y} clock={clock} />
           {ZONE_COLORS.map((c, z) => (
-            <Line key={c} p1={vec(1 + z * 70, 90)} p2={vec(69 + z * 70, 90)} color={c} strokeWidth={3} />
+            <Line key={c} p1={vec(1 + z * 70, BAR_Y)} p2={vec(69 + z * 70, BAR_Y)} color={c} strokeWidth={3} />
           ))}
           {font && (
             <>
               {ZONE_COLORS.map((_, z) => {
                 const label = `Z${z + 1}`;
-                return <SkText key={label} x={35 + z * 70 - font.measureText(label).width / 2} y={104} text={label} font={font} color={C.ink} />;
+                return <SkText key={label} x={35 + z * 70 - font.measureText(label).width / 2} y={ZLABEL_Y} text={label} font={font} color={C.ink} />;
               })}
               <SkText x={0} y={8} text="POWER" font={font} color={C.grey} />
-              <SkText x={0} y={186} text="HEART RATE" font={font} color={C.grey} />
+              <SkText x={0} y={H - 2} text="HEART RATE" font={font} color={C.grey} />
             </>
           )}
         </Group>
@@ -99,7 +105,7 @@ function ColorTicks({ color, list, dir, y, clock }: { color: string; list: { i: 
       const f = ease((clock.value - (450 + t.i * 14)) / 550);
       if (f <= 0) continue;
       p.moveTo(t.x, y);
-      p.lineTo(t.x, y + dir * t.L * f);
+      p.lineTo(t.x, y + dir * t.L * V * f);
     }
     return p.detach();
   });
