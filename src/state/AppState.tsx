@@ -1,14 +1,16 @@
 import * as Haptics from 'expo-haptics';
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { DAYS, RECENT_FOODS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
+import { DAYS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
+import { deleteEntry, insertEntries, loadEntries, loadRecents, localDay, type EntrySource, type LogEntry, type RecentFood } from '@/lib/foodLog';
+import { sumTotals, type FoodInput } from '@/lib/nutrition';
 
 export type ThuPhase = 'thu_start' | 'thu_mid' | 'thu_end';
 export const MEALS = ['Breakfast', 'Lunch', 'Snack', 'Dinner'] as const;
 export type Meal = (typeof MEALS)[number];
 
-/** food index → true, per day variant */
-type Picks = Partial<Record<DayVariant, Record<number, boolean>>>;
+/** Recent food name → ticked, per log day. */
+type Picks = Record<string, Record<string, boolean>>;
 
 interface AppState {
   dayIndex: number;
@@ -24,14 +26,26 @@ interface AppState {
   setAddOpen: (open: boolean) => void;
   meal: Meal;
   setMeal: (m: Meal) => void;
-  /** Ticked in the add panel but not yet committed. */
-  picked: Record<number, boolean>;
-  togglePick: (foodIndex: number) => void;
-  /** Totals for the current day including committed foods. */
+  /** Recent foods, most recently used first (persisted). */
+  recents: RecentFood[];
+  /** Ticked in the add panel but not yet logged (logged when the panel closes). Keyed by name. */
+  picked: Record<string, boolean>;
+  togglePick: (name: string) => void;
+  /** Log foods to the selected day and meal right away (manual entry, photo review). */
+  logFoods: (foods: FoodInput[], source: EntrySource) => Promise<void>;
+  removeEntry: (id: number) => Promise<void>;
+  /** What's logged on the selected day, oldest first. */
+  entries: LogEntry[];
+  /** Totals for the current day: the sample baseline plus logged entries. */
   totals: { gP: number; gC: number; gF: number; left: number; addedKcal: number };
 }
 
 const Ctx = createContext<AppState | null>(null);
+
+/** Log key for a day: the real date for "today", a stable sample key for the rest of the sample week. */
+function dayKeyFor(dayIndex: number, variant: DayVariant) {
+  return dayIndex === TODAY_INDEX ? localDay() : `sample:${variant}`;
+}
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [dayIndex, setDayIndex] = useState(TODAY_INDEX);
@@ -40,10 +54,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [addOpen, setAddOpenRaw] = useState(false);
   const [meal, setMeal] = useState<Meal>('Snack');
   const [picks, setPicks] = useState<Picks>({});
-  const [committed, setCommitted] = useState<Picks>({});
+  const [allEntries, setAllEntries] = useState<LogEntry[]>([]);
+  const [recents, setRecents] = useState<RecentFood[]>([]);
 
   const variant: DayVariant =
     dayIndex === 3 ? thuPhase : dayIndex === 5 && satDone ? 'sat_done' : (WEEK[dayIndex] as DayVariant);
+  const dayKey = dayKeyFor(dayIndex, variant);
+
+  useEffect(() => {
+    let live = true;
+    Promise.all([loadEntries(), loadRecents()])
+      .then(([e, r]) => {
+        if (!live) return;
+        setAllEntries(e);
+        setRecents(r);
+      })
+      .catch((err) => console.warn('[foodLog] load failed', err));
+    return () => {
+      live = false;
+    };
+  }, []);
 
   const toggleSatDone = useCallback(() => setSatDone((d) => !d), []);
 
@@ -51,42 +81,63 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setThuPhase((p) => (p === 'thu_start' ? 'thu_mid' : p === 'thu_mid' ? 'thu_end' : 'thu_start'));
   }, []);
 
-  // Closing the panel commits what was ticked, which animates the Today screen.
+  const persist = useCallback(
+    async (foods: FoodInput[], source: EntrySource) => {
+      if (!foods.length) return;
+      const added = await insertEntries(dayKey, meal, foods, source);
+      setAllEntries((e) => [...e, ...added]);
+      setRecents(await loadRecents());
+    },
+    [dayKey, meal],
+  );
+
+  // Closing the panel logs what was ticked in Recent, which animates the Today screen.
   const setAddOpen = useCallback(
     (open: boolean) => {
       setAddOpenRaw(open);
       if (!open) {
-        const ticked = picks[variant] ?? {};
-        const before = committed[variant] ?? {};
-        // Confirm with a success haptic when closing actually logs something new.
-        if (Object.keys(ticked).some((k) => ticked[+k] && !before[+k])) {
+        const ticked = picks[dayKey] ?? {};
+        const foods = recents.filter((r) => ticked[r.name]).map(({ name, kcal, carbs, protein, fat }) => ({ name, kcal, carbs, protein, fat }));
+        if (foods.length) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setPicks((p) => ({ ...p, [dayKey]: {} }));
+          persist(foods, 'recent').catch((err) => console.warn('[foodLog] save failed', err));
         }
-        setCommitted((c) => ({ ...c, [variant]: { ...ticked } }));
       }
     },
-    [picks, committed, variant],
+    [picks, dayKey, recents, persist],
   );
 
   const togglePick = useCallback(
-    (i: number) => setPicks((p) => ({ ...p, [variant]: { ...(p[variant] ?? {}), [i]: !(p[variant] ?? {})[i] } })),
-    [variant],
+    (name: string) => setPicks((p) => ({ ...p, [dayKey]: { ...(p[dayKey] ?? {}), [name]: !(p[dayKey] ?? {})[name] } })),
+    [dayKey],
   );
+
+  const logFoods = useCallback(
+    async (foods: FoodInput[], source: EntrySource) => {
+      await persist(foods, source);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+    [persist],
+  );
+
+  const removeEntry = useCallback(async (id: number) => {
+    await deleteEntry(id);
+    setAllEntries((e) => e.filter((x) => x.id !== id));
+  }, []);
+
+  const entries = useMemo(() => allEntries.filter((e) => e.day === dayKey), [allEntries, dayKey]);
 
   const totals = useMemo(() => {
     const base = DAYS[variant];
-    const com = committed[variant] ?? {};
-    let aP = 0, aC = 0, aF = 0, aK = 0;
-    RECENT_FOODS.forEach((f, i) => {
-      if (com[i]) { aP += f.p; aC += f.c; aF += f.f; aK += f.kcal; }
-    });
-    return { gP: base.gP + aP, gC: base.gC + aC, gF: base.gF + aF, left: Math.max(0, base.left - aK), addedKcal: aK };
-  }, [committed, variant]);
+    const t = sumTotals(entries);
+    return { gP: base.gP + t.protein, gC: base.gC + t.carbs, gF: base.gF + t.fat, left: Math.max(0, base.left - t.kcal), addedKcal: t.kcal };
+  }, [entries, variant]);
 
   const value: AppState = {
     dayIndex, setDayIndex, thuPhase, cycleThuPhase, satDone, toggleSatDone, variant,
-    addOpen, setAddOpen, meal, setMeal,
-    picked: picks[variant] ?? {}, togglePick, totals,
+    addOpen, setAddOpen, meal, setMeal, recents,
+    picked: picks[dayKey] ?? {}, togglePick, logFoods, removeEntry, entries, totals,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
