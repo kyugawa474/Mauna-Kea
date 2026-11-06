@@ -3,7 +3,8 @@ import { useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
-import { WEEKS, type Week } from '@/data/sample';
+import { type Week } from '@/data/sample';
+import { useApp } from '@/state/AppState';
 import { useTheme } from '@/state/Theme';
 import { DT, F, T, type Palette } from '@/theme';
 
@@ -22,6 +23,7 @@ const easeOut = (t: number) => {
  */
 export function WeeklyBars({ width, clock }: { width: number; clock: SharedValue<number> }) {
   const { C } = useTheme();
+  const WEEKS = useApp().data.weeks;
   const col = width * 0.116;
   const total = col * WEEKS.length;
   const current = WEEKS.findIndex((w) => w.kind === 'current');
@@ -38,7 +40,7 @@ export function WeeklyBars({ width, clock }: { width: number; clock: SharedValue
       contentOffset={{ x: col, y: 0 }}
       style={{ marginHorizontal: -20 }}
       contentContainerStyle={{ paddingHorizontal: 20 }}
-      accessibilityLabel="Weekly kilojoules versus target from Aug 24 to Dec 7"
+      accessibilityLabel={`Weekly kilojoules versus target, weeks of ${WEEKS[0]?.label} to ${WEEKS[WEEKS.length - 1]?.label}`}
     >
       <View style={{ width: total }}>
         <Canvas style={{ width: total, height: CHART_H + 4 }}>

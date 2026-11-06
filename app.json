@@ -21,7 +21,8 @@
       "package": "com.kyleyugawa.maunakea"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "server"
     },
     "plugins": [
       "expo-router",

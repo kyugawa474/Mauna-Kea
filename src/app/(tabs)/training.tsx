@@ -1,14 +1,14 @@
-import { useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 
 import { AddPanel } from '@/components/AddPanel';
 import { SkyBackdrop } from '@/components/Sky';
 import { WeeklyBars } from '@/components/training/WeeklyBars';
 import { ZoneGraph } from '@/components/training/ZoneGraph';
-import { ACTIVITY_LOG, CONSISTENCY, TRAINING_STATS } from '@/data/sample';
 import { fmt, useCountUp } from '@/lib/useTween';
+import { useApp } from '@/state/AppState';
 import { themed, useTheme } from '@/state/Theme';
 import { DT, F, useLayout, T, type Palette } from '@/theme';
 
@@ -16,6 +16,8 @@ export default function TrainingScreen() {
   const { width, height, stackTiles, headerTop, navH } = useLayout();
   const { C, caps, openTweaks, override } = useTheme();
   const styles = useStyles();
+  const { data, strava } = useApp();
+  const { stats: TRAINING_STATS, activityLog: ACTIVITY_LOG } = data;
   const inner = width - 40;
 
   // One clock drives every entrance animation; it restarts each time the tab gains focus.
@@ -74,9 +76,19 @@ export default function TrainingScreen() {
       }}
     >
       <View style={{ gap: 6, paddingBottom: 24 }}>
-        <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey }]}>
-          Thu · Oct 22{override ? ` · ${override} preview` : ''}
-        </Text>
+        <View style={styles.headRow}>
+          <Text maxFontSizeMultiplier={DT.list} style={[caps, { fontSize: T.label, color: C.grey, flexShrink: 1 }]}>
+            {data.todayLabel}{override ? ` · ${override} preview` : ''}
+          </Text>
+          {/* Strava link: where live data comes from (sample data until connected). */}
+          <Link href="/strava" asChild>
+            <Pressable hitSlop={12} accessibilityRole="link" accessibilityLabel={strava.status === 'disconnected' ? 'Connect Strava' : 'Strava connection'}>
+              <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: strava.status === 'disconnected' ? C.accentText : C.grey }]}>
+                {strava.status === 'disconnected' || strava.status === 'loading' ? 'Connect Strava →' : strava.status === 'syncing' ? 'Strava · syncing' : 'Strava ✓'}
+              </Text>
+            </Pressable>
+          </Link>
+        </View>
         {/* Long-press the title to open the Tweaks panel (design preview controls). */}
         <Text maxFontSizeMultiplier={DT.fixed} style={styles.h1} onLongPress={openTweaks} accessibilityHint="Long press for design tweaks">
           Training
@@ -84,7 +96,7 @@ export default function TrainingScreen() {
       </View>
 
       <Section title="Consistency" right="12 weeks">
-        <Consistency clock={clock} width={inner} />
+        <Consistency clock={clock} width={inner} data={data.consistency} />
       </Section>
 
       <Section title="Weekly kJ">
@@ -102,7 +114,7 @@ export default function TrainingScreen() {
 
       <Section
         title="Time in zone"
-        right="Last 8 weeks · 41h"
+        right={data.zoneRange}
         onLayout={(e) => {
           zoneBox.current = { y: e.nativeEvent.layout.y, h: e.nativeEvent.layout.height };
           revealZones();
@@ -115,15 +127,20 @@ export default function TrainingScreen() {
         <Text maxFontSizeMultiplier={DT.list} style={caps}>Activity</Text>
         <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: C.grey }]}>This week</Text>
       </View>
+      {ACTIVITY_LOG.length === 0 && (
+        <View style={styles.logRow}>
+          <Text maxFontSizeMultiplier={DT.list} style={styles.note}>No activities yet this week</Text>
+        </View>
+      )}
       {ACTIVITY_LOG.map((a) => (
-        <View key={a.date} style={styles.logRow}>
+        <View key={a.id} style={styles.logRow}>
           <ActivityIcon kind={a.kind} />
           <View style={{ flex: 1, gap: 3 }}>
             <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: C.grey }]}>{a.date}</Text>
             <Text maxFontSizeMultiplier={DT.list} style={[styles.logName, a.kind === 'skipped' && { color: C.grey }]}>{a.name}</Text>
             <Text maxFontSizeMultiplier={DT.list} style={styles.note}>{a.sub}</Text>
           </View>
-          {'kj' in a && (
+          {a.kj != null && (
             <Text maxFontSizeMultiplier={DT.list} style={styles.logKj}>
               {fmt(a.kj)}
               <Text maxFontSizeMultiplier={DT.list} style={styles.note}> kJ</Text>
@@ -181,7 +198,7 @@ function Stat({ label, value, unit, hot }: { label: string; value: string; unit:
 
 const ROW_LABELS = ['M', '', 'W', '', 'F', '', 'S'];
 
-function Consistency({ clock, width }: { clock: SharedValue<number>; width: number }) {
+function Consistency({ clock, data: CONSISTENCY }: { clock: SharedValue<number>; width: number; data: string[][] }) {
   const { C } = useTheme();
   const styles = useStyles();
   return (
@@ -266,6 +283,7 @@ function ActivityIcon({ kind }: { kind: string }) {
 }
 
 const useStyles = themed((C: Palette) => StyleSheet.create({
+  headRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 },
   page: { paddingTop: 56, paddingHorizontal: 20, paddingBottom: 40 },
   h1: { fontFamily: F.semibold, fontSize: T.head, letterSpacing: -1.2, lineHeight: 40, color: C.ink },
   section: {

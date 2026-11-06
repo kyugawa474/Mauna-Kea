@@ -42,7 +42,10 @@ function Root({ loaded }: { loaded: boolean }) {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.bg }}>
       <AppStateProvider>
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg } }} />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg } }}>
+          {/* Strava connection, opened from Training's header. */}
+          <Stack.Screen name="strava" options={{ presentation: 'modal' }} />
+        </Stack>
         <Tweaks />
       </AppStateProvider>
     </GestureHandlerRootView>

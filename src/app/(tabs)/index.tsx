@@ -19,7 +19,7 @@ import { SunCanvas } from '@/components/today/SunCanvas';
 import { WeekStrip } from '@/components/today/WeekStrip';
 import { AddPanel } from '@/components/AddPanel';
 import { SkyBackdrop } from '@/components/Sky';
-import { DAYS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
+import { type Day } from '@/data/sample';
 import { CX, CY, EDGE_DOWN, EDGE_REST, EDGE_UP, progress, ramp, snapEdge, sunRadius, waterRadius } from '@/lib/frost';
 import { fmt, useTween } from '@/lib/useTween';
 import { useApp } from '@/state/AppState';
@@ -44,8 +44,8 @@ let hintDismissed = false;
 
 export default function TodayScreen() {
   const { s, width, height, contentH, headerTop } = useLayout();
-  const { dayIndex, setDayIndex, variant, cycleThuPhase, toggleSatDone, totals } = useApp();
-  const day = DAYS[variant];
+  const { dayIndex, setDayIndex, variant, cycleThuPhase, toggleSatDone, totals, day, dayAt, data } = useApp();
+  const TODAY_INDEX = data.todayIndex;
   const { C, caps, openTweaks } = useTheme();
   const styles = useStyles();
 
@@ -75,7 +75,7 @@ export default function TodayScreen() {
   }, [edge]);
 
   // Long-pressing the date label steps through sample states: Thursday's ride phases, Saturday done/planned.
-  const longPress = dayIndex === 3 ? cycleThuPhase : dayIndex === 5 ? toggleSatDone : undefined;
+  const longPress = data.source !== 'sample' ? undefined : dayIndex === 3 ? cycleThuPhase : dayIndex === 5 ? toggleSatDone : undefined;
 
   // Bottom of the Ride headline in design px; the pulled-down sun zooms to stay below it.
   const [headBottom, setHeadBottom] = useState(250);
@@ -187,7 +187,7 @@ export default function TodayScreen() {
   }));
 
   const restDay = day.kj === 0 && day.tgt === 0;
-  const tomorrow = restDay && dayIndex < 6 ? DAYS[(dayIndex + 1 === 3 ? 'thu_start' : WEEK[dayIndex + 1]) as DayVariant] : null;
+  const tomorrow = restDay && dayIndex < 6 ? dayAt(dayIndex + 1) : null;
 
   const at = (y: number) => ({ position: 'absolute' as const, left: 20 * s, right: 20 * s, top: y * s });
   // The header block moves down as one piece so it clears the status bar; the sun and frost stay put.
@@ -378,7 +378,7 @@ function Macro({ label, value, goal, bar, live }: { label: string; value: number
 }
 
 /** Rest day: a dashed ghost of tomorrow's sun, sized to tomorrow's kJ target. */
-function Tomorrow({ day, s, page }: { day: (typeof DAYS)[DayVariant]; s: number; page: ReturnType<typeof useAnimatedStyle> }) {
+function Tomorrow({ day, s, page }: { day: Day; s: number; page: ReturnType<typeof useAnimatedStyle> }) {
   const r = sunRadius(day.tgt);
   const { C, caps } = useTheme();
   const styles = useStyles();
