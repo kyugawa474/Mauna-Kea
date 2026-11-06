@@ -16,6 +16,9 @@ interface AppState {
   /** Sample-data switch so the three Thursday states can be previewed. */
   thuPhase: ThuPhase;
   cycleThuPhase: () => void;
+  /** Sample-data switch: Saturday as planned, or as a completed long ride (to preview a big sun). */
+  satDone: boolean;
+  toggleSatDone: () => void;
   variant: DayVariant;
   addOpen: boolean;
   setAddOpen: (open: boolean) => void;
@@ -33,12 +36,16 @@ const Ctx = createContext<AppState | null>(null);
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [dayIndex, setDayIndex] = useState(TODAY_INDEX);
   const [thuPhase, setThuPhase] = useState<ThuPhase>('thu_end');
+  const [satDone, setSatDone] = useState(false);
   const [addOpen, setAddOpenRaw] = useState(false);
   const [meal, setMeal] = useState<Meal>('Snack');
   const [picks, setPicks] = useState<Picks>({});
   const [committed, setCommitted] = useState<Picks>({});
 
-  const variant: DayVariant = dayIndex === 3 ? thuPhase : (WEEK[dayIndex] as DayVariant);
+  const variant: DayVariant =
+    dayIndex === 3 ? thuPhase : dayIndex === 5 && satDone ? 'sat_done' : (WEEK[dayIndex] as DayVariant);
+
+  const toggleSatDone = useCallback(() => setSatDone((d) => !d), []);
 
   const cycleThuPhase = useCallback(() => {
     setThuPhase((p) => (p === 'thu_start' ? 'thu_mid' : p === 'thu_mid' ? 'thu_end' : 'thu_start'));
@@ -77,7 +84,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [committed, variant]);
 
   const value: AppState = {
-    dayIndex, setDayIndex, thuPhase, cycleThuPhase, variant,
+    dayIndex, setDayIndex, thuPhase, cycleThuPhase, satDone, toggleSatDone, variant,
     addOpen, setAddOpen, meal, setMeal,
     picked: picks[variant] ?? {}, togglePick, totals,
   };
