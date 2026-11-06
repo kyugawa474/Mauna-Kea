@@ -228,9 +228,9 @@ export default function TodayScreen() {
 
         {day.ride && (
           <Animated.View style={[at(ROW_Y), styles.grid, page, metricsOut]}>
-            <Metric label="Time" value={day.ride.min} unit=" min" sub="moving" bar={C.ink} />
-            <Metric label="Avg power" value={day.ride.w} unit=" W" sub={`${day.ride.wkg} W/kg`} bar={C.orange} />
-            <Metric label="Intensity" value={day.ride.pct} unit=" % FTP" sub={day.ride.zone} bar="#A9A8A3" />
+            <Metric label="Time" value={day.ride.min} unit=" min" bar={C.ink} />
+            <Metric label="Avg power" value={day.ride.w} unit=" W" bar={C.orange} />
+            <Metric label="Intensity" value={day.ride.pct} unit=" % FTP" bar="#A9A8A3" />
           </Animated.View>
         )}
 
@@ -316,7 +316,7 @@ function Header({ label, selected, onSelect, onLongPress }: { label: string; sel
   );
 }
 
-function Metric({ label, value, unit, sub, bar }: { label: string; value: number; unit: string; sub: string; bar: string }) {
+function Metric({ label, value, unit, bar }: { label: string; value: number; unit: string; bar: string }) {
   return (
     <View style={[styles.cell, { borderTopColor: bar }]}>
       <Text maxFontSizeMultiplier={DT.fixed} style={caps}>{label}</Text>
@@ -324,7 +324,6 @@ function Metric({ label, value, unit, sub, bar }: { label: string; value: number
         {value}
         <Text maxFontSizeMultiplier={DT.fixed} style={styles.unit}>{unit}</Text>
       </Text>
-      <Text maxFontSizeMultiplier={DT.fixed} style={styles.unit}>{sub}</Text>
     </View>
   );
 }
