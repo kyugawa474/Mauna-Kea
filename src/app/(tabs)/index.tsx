@@ -28,7 +28,7 @@ const TAP_TOP = 250;
 const TAP_BOTTOM = 640;
 
 /** At rest the fuel headline sits at the foot of the frost, mirroring the ride headline at the top (design px). */
-const FUEL_REST = 626;
+const FUEL_REST = 590;
 /** The ride headline's spot; swiping up carries the fuel headline here. */
 const HEAD_Y = 133;
 /** Where the macro (and ride metric) row sits once revealed. */
@@ -191,7 +191,7 @@ export default function TodayScreen() {
     return e >= EDGE_REST ? restTop + (e - EDGE_REST) * s : headTop + (restTop - headTop) * (e / EDGE_REST);
   };
   const fuelMove = useAnimatedStyle(() => ({ top: fuelTopAt(edge.value) }));
-  const macrosMove = useAnimatedStyle(() => ({ top: Math.max(ROW_Y * s, fuelTopAt(edge.value) + 140 * s) }));
+  const macrosMove = useAnimatedStyle(() => ({ top: Math.max(ROW_Y * s, fuelTopAt(edge.value) + (contentH + 8 - restTop)) }));
 
   return (
     <GestureDetector gesture={pan}>
@@ -222,7 +222,8 @@ export default function TodayScreen() {
 
         <Animated.View style={[atHead(HEAD_Y), styles.block, page, rideOut]}>
           <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Ride</Text>
-          <BigNumber value={fmt(day.kj)} note={day.note} />
+          <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{fmt(day.kj)}</Text>
+          <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={styles.note}>{day.note}</Text>
         </Animated.View>
 
         {day.ride && (
@@ -256,8 +257,8 @@ export default function TodayScreen() {
 
             <Animated.View style={[at(FUEL_REST), styles.block, page, fuelMove]}>
               <Text maxFontSizeMultiplier={DT.fixed} style={caps}>Eat</Text>
+              <Text maxFontSizeMultiplier={DT.fixed} style={[styles.big, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
               <View style={styles.baseline}>
-                <Text maxFontSizeMultiplier={DT.fixed} style={[styles.big, { color: live ? C.orangeText : C.ink }]}>{fmt(left)}</Text>
                 <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={[styles.note, styles.shrink, { color: C.frostInk }]}>kcal left of {fmt(day.of)}</Text>
                 {totals.addedKcal > 0 && <Text maxFontSizeMultiplier={DT.fixed} style={[styles.note, { color: C.orangeText, opacity: live ? 1 : 0 }]}>−{totals.addedKcal}</Text>}
               </View>
@@ -311,15 +312,6 @@ function Header({ label, selected, onSelect, onLongPress }: { label: string; sel
         <Text maxFontSizeMultiplier={DT.fixed} style={[caps, { fontSize: T.label, color: C.grey }]}>{label}</Text>
       </Pressable>
       <WeekStrip selected={selected} onSelect={onSelect} />
-    </View>
-  );
-}
-
-function BigNumber({ value, note }: { value: string; note: string }) {
-  return (
-    <View style={styles.baseline}>
-      <Text maxFontSizeMultiplier={DT.fixed} style={styles.big}>{value}</Text>
-      <Text maxFontSizeMultiplier={DT.fixed} numberOfLines={1} adjustsFontSizeToFit style={[styles.note, styles.shrink]}>{note}</Text>
     </View>
   );
 }
@@ -384,7 +376,7 @@ function Tomorrow({ day, s, page }: { day: (typeof DAYS)[DayVariant]; s: number;
 const styles = StyleSheet.create({
   screen: { backgroundColor: C.bg, overflow: 'hidden' },
   filmBox: { position: 'absolute', left: 0, right: 0, bottom: 0, overflow: 'hidden' },
-  block: { gap: 8, paddingTop: 12 },
+  block: { gap: 6, paddingTop: 12, alignItems: 'center' },
   baseline: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   big: { fontFamily: F.thin, fontSize: T.display, letterSpacing: -2.2, lineHeight: 56, color: C.ink },
   note: { fontFamily: F.mono, fontSize: T.label, color: C.grey },
