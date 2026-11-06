@@ -21,11 +21,21 @@
       "package": "com.kyleyugawa.maunakea"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "server"
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Mauna Kea reads the meal photo you pick so it can estimate the food's nutrition.",
+          "cameraPermission": "Mauna Kea uses the camera to photograph a meal and estimate its nutrition.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "scheme": "maunakea",
     "experiments": {
