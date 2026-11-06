@@ -15,7 +15,8 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { DAYS, RECENT_FOODS } from '@/data/sample';
 import { MEALS, useApp } from '@/state/AppState';
-import { C, DT, F, caps, useLayout, T } from '@/theme';
+import { themed, useTheme } from '@/state/Theme';
+import { DT, F, useLayout, T, type Palette } from '@/theme';
 
 /**
  * "Bloom" food log: a circle grows out of the + button, then rows stagger in. Each tab screen
@@ -24,6 +25,8 @@ import { C, DT, F, caps, useLayout, T } from '@/theme';
 export function AddPanel() {
   const { width, height, headerTop } = useLayout();
   const { addOpen, setAddOpen, meal, setMeal, picked, togglePick, variant } = useApp();
+  const { C, caps } = useTheme();
+  const styles = useStyles();
   const open = useSharedValue(0);
 
   // Swipe down to dismiss, like an iOS sheet. Closing commits what was ticked (same as tapping ✕).
@@ -93,7 +96,7 @@ export function AddPanel() {
                   accessibilityState={{ selected: on }}
                   style={[styles.meal, i > 0 && styles.mealDivider, on && { backgroundColor: C.ink }]}
                 >
-                  <Text maxFontSizeMultiplier={DT.strip} numberOfLines={1} adjustsFontSizeToFit style={[caps, { letterSpacing: 0.8, color: on ? C.white : C.ink }]}>{m}</Text>
+                  <Text maxFontSizeMultiplier={DT.strip} numberOfLines={1} adjustsFontSizeToFit style={[caps, { letterSpacing: 0.8, color: on ? C.paper : C.ink }]}>{m}</Text>
                 </Pressable>
               );
             })}
@@ -156,19 +159,28 @@ function Stagger({ i, addOpen, open, children }: { i: number; addOpen: boolean; 
   return <Animated.View style={st}>{children}</Animated.View>;
 }
 
-const Plus = () => (
-  <View style={styles.icon}>
-    <View style={{ position: 'absolute', width: 14, height: 1.6, backgroundColor: C.white }} />
-    <View style={{ position: 'absolute', width: 1.6, height: 14, backgroundColor: C.white }} />
-  </View>
-);
-const Check = () => (
-  <View style={[styles.icon, { transform: [{ rotate: '-45deg' }, { translateY: -2 }] }]}>
-    <View style={{ width: 13, height: 6.5, borderLeftWidth: 1.8, borderBottomWidth: 1.8, borderColor: C.white }} />
-  </View>
-);
+function Plus() {
+  const { C } = useTheme();
+  const styles = useStyles();
+  return (
+    <View style={styles.icon}>
+      <View style={{ position: 'absolute', width: 14, height: 1.6, backgroundColor: C.paper }} />
+      <View style={{ position: 'absolute', width: 1.6, height: 14, backgroundColor: C.paper }} />
+    </View>
+  );
+}
+function Check() {
+  const { C } = useTheme();
+  const styles = useStyles();
+  // On the orange (picked) button: dark in both schemes.
+  return (
+    <View style={[styles.icon, { transform: [{ rotate: '-45deg' }, { translateY: -2 }] }]}>
+      <View style={{ width: 13, height: 6.5, borderLeftWidth: 1.8, borderBottomWidth: 1.8, borderColor: C.onOrange }} />
+    </View>
+  );
+}
 
-const styles = StyleSheet.create({
+const useStyles = themed((C: Palette) => StyleSheet.create({
   inner: { flex: 1, paddingTop: 56, paddingHorizontal: 20 },
   grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3, backgroundColor: C.grey2, marginTop: -4, marginBottom: 14 },
   titleRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, justifyContent: 'space-between', alignItems: 'baseline' },
@@ -188,4 +200,4 @@ const styles = StyleSheet.create({
   macros: { fontFamily: F.mono, fontSize: T.label, color: C.grey },
   addBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center' },
   icon: { width: 16, height: 16, alignItems: 'center', justifyContent: 'center' },
-});
+}));

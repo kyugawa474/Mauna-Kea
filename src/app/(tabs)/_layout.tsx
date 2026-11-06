@@ -3,7 +3,8 @@ import { NativeTabs } from 'expo-router/native-tabs';
 
 import { TODAY_INDEX } from '@/data/sample';
 import { useApp } from '@/state/AppState';
-import { C, F } from '@/theme';
+import { useTheme } from '@/state/Theme';
+import { F } from '@/theme';
 
 const PLUS = require('../../../assets/tabs/plus.png');
 const CLOSE = require('../../../assets/tabs/close.png');
@@ -20,6 +21,7 @@ const TRAINING = require('../../../assets/tabs/training.png');
  */
 export default function TabsLayout() {
   const { addOpen, setAddOpen, setDayIndex } = useApp();
+  const { C } = useTheme();
 
   return (
     <NativeTabs

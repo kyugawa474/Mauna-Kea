@@ -26,7 +26,9 @@ import {
 } from 'react-native-reanimated';
 
 import { CX, CY, polar, progress, ramp } from '@/lib/frost';
-import { C } from '@/theme';
+import { SkyFill } from '@/components/Sky';
+import { useTheme } from '@/state/Theme';
+import { withAlpha } from '@/theme';
 
 interface Props {
   edge: SharedValue<number>;
@@ -48,6 +50,9 @@ interface Props {
  * target — stands for refuelling. Swiping up draws three macro goal rings over it.
  */
 export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, dx, s, width, height }: Props) {
+  const { C, sky } = useTheme();
+  const { orange, pool, glint, glintK } = C;
+  const line = [0, 0.95, 0.5, 1, 0.45, 0.9, 0].map((a) => withAlpha(glint, a * glintK));
   const t = useSharedValue(0);
   useEffect(() => {
     t.set(withRepeat(withTiming(1, { duration: 8000, easing: Easing.inOut(Easing.sin) }), -1, true));
@@ -59,7 +64,7 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, dx, s, w
   // The pool reflects the sun in orange at rest and when pulled down, and clears to white as the
   // frost rises, finishing just before the macro rings start drawing (they need the white to read).
   const waterColor = useDerivedValue(() =>
-    interpolateColor(ramp(progress(edge.value), 0.5, 0.56), [0, 1], [C.orange, '#FFFFFF']),
+    interpolateColor(ramp(progress(edge.value), 0.5, 0.56), [0, 1], [orange, pool]),
   );
   const hl = useDerivedValue(() => Skia.XYWHRect(0, edge.value - 1, 390, 2));
   const glow = useDerivedValue(() => Skia.XYWHRect(0, edge.value + 1, 390, 26));
@@ -72,6 +77,8 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, dx, s, w
 
   return (
     <Canvas style={{ position: 'absolute', left: 0, top: 0, width, height }} pointerEvents="none">
+      {/* The same sky as the backdrop, seen through the frost tint. */}
+      <SkyFill sky={sky} width={width} height={height} stars={false} />
       <Group transform={[{ scale: s }]}>
         <Rect x={0} y={0} width={390} height={h} color={C.frost} />
         {/* film grain */}
@@ -93,18 +100,18 @@ export function FrostCanvas({ edge, waterR, carbs, protein, fat, goals, dx, s, w
           <LinearGradient
             start={vec(0, 0)}
             end={vec(390, 0)}
-            colors={['#FFFFFF00', '#FFFFFFF2', '#FFFFFF80', '#FFFFFF', '#FFFFFF73', '#FFFFFFE6', '#FFFFFF00']}
+            colors={line}
             positions={[0, 0.18, 0.38, 0.55, 0.74, 0.88, 1]}
           />
         </Rect>
         <Rect rect={glow}>
-          <LinearGradient start={glowFrom} end={glowTo} colors={['#FFFFFF47', '#FFFFFF00']} />
+          <LinearGradient start={glowFrom} end={glowTo} colors={[withAlpha(glint, 0.28 * glintK), withAlpha(glint, 0)]} />
         </Rect>
 
         <Group transform={shift}>
-          <Ring label="Carbs" value={carbs} goal={goals.C} r={RING_R[0]} color={C.ink} edge={edge} font={font} />
-          <Ring label="Protein" value={protein} goal={goals.P} r={RING_R[1]} color={C.orange} edge={edge} font={font} />
-          <Ring label="Fat" value={fat} goal={goals.F} r={RING_R[2]} color={C.peach} edge={edge} font={font} />
+          <Ring label="Carbs" value={carbs} goal={goals.C} r={RING_R[0]} color={C.ink} edge={edge} font={font} ink={C.ink} off={C.tickOff} />
+          <Ring label="Protein" value={protein} goal={goals.P} r={RING_R[1]} color={C.orange} edge={edge} font={font} ink={C.ink} off={C.tickOff} />
+          <Ring label="Fat" value={fat} goal={goals.F} r={RING_R[2]} color={C.peach} edge={edge} font={font} ink={C.ink} off={C.tickOff} />
         </Group>
       </Group>
     </Canvas>
@@ -130,6 +137,8 @@ function Ring({
   color,
   edge,
   font,
+  ink,
+  off,
 }: {
   label: string;
   value: SharedValue<number>;
@@ -138,6 +147,8 @@ function Ring({
   color: string;
   edge: SharedValue<number>;
   font: SkFont | null;
+  ink: string;
+  off: string;
 }) {
   // `edge.value` and `value.value` must be read in the useDerivedValue worklets themselves:
   // Reanimated only subscribes to shared values referenced there, not inside helpers they call.
@@ -167,11 +178,11 @@ function Ring({
   const textW = font ? font.measureText(text).width : 0;
   return (
     <Group>
-      <Path path={left} color={C.tickOff} style="stroke" strokeWidth={1.2} />
+      <Path path={left} color={off} style="stroke" strokeWidth={1.2} />
       <Path path={eaten} color={color} style="stroke" strokeWidth={2.2} />
       {font && (
         <Group opacity={labelOpacity}>
-          <Text x={CX - 8 - textW} y={CY - r + TICK.eaten / 2 + 4} text={text} font={font} color={C.ink} />
+          <Text x={CX - 8 - textW} y={CY - r + TICK.eaten / 2 + 4} text={text} font={font} color={ink} />
         </Group>
       )}
     </Group>

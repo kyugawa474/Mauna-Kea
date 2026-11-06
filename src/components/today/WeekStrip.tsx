@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { C, DT, F, T, px } from '@/theme';
+import { themed, useTheme } from '@/state/Theme';
+import { DT, F, T, px, type Palette } from '@/theme';
 
 const LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -10,6 +11,8 @@ const MARK_LABEL: Record<Mark, string> = { fuelled: 'fuelled', rode: 'rode', res
 const MARKS: Mark[] = ['fuelled', 'rode', 'rest', 'rode', 'planned', 'planned', 'planned'];
 
 export function WeekStrip({ selected, onSelect }: { selected: number; onSelect?: (i: number) => void }) {
+  const { C } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       {LETTERS.map((l, i) => {
@@ -35,7 +38,7 @@ export function WeekStrip({ selected, onSelect }: { selected: number; onSelect?:
                 m === 'planned' && { borderWidth: 1.2, borderColor: C.line },
               ]}
             />
-            <Text maxFontSizeMultiplier={DT.strip} style={[styles.letter, { color: filled ? C.white : m === 'fuelled' ? C.orangeText : C.grey }]}>{l}</Text>
+            <Text maxFontSizeMultiplier={DT.strip} style={[styles.letter, { color: filled ? C.onOrange : m === 'fuelled' ? C.orangeText : C.grey }]}>{l}</Text>
           </Pressable>
         );
       })}
@@ -50,10 +53,10 @@ const SEL = 34;
 const MARK = 28;
 const ring = (d: number) => ({ position: 'absolute' as const, width: d, height: d, borderRadius: d / 2, top: (CELL - d) / 2, left: (CELL - d) / 2 });
 
-const styles = StyleSheet.create({
+const useStyles = themed((C: Palette) => StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', height: CELL, alignItems: 'center' },
   cell: { width: CELL, height: CELL, alignItems: 'center', justifyContent: 'center' },
   sel: { ...ring(SEL), borderWidth: px(1.25), borderColor: C.ink },
   mark: ring(MARK),
   letter: { fontFamily: F.monoMedium, fontSize: T.label },
-});
+}));

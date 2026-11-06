@@ -4,7 +4,8 @@ import { ScrollView, Text, View } from 'react-native';
 import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
 import { WEEKS, type Week } from '@/data/sample';
-import { C, DT, F, T } from '@/theme';
+import { useTheme } from '@/state/Theme';
+import { DT, F, T, type Palette } from '@/theme';
 
 const CHART_H = 150;
 const PAD = 1.5;
@@ -20,6 +21,7 @@ const easeOut = (t: number) => {
  * with the next week peeking in so it reads as swipeable without instruction text.
  */
 export function WeeklyBars({ width, clock }: { width: number; clock: SharedValue<number> }) {
+  const { C } = useTheme();
   const col = width * 0.116;
   const total = col * WEEKS.length;
   const current = WEEKS.findIndex((w) => w.kind === 'current');
@@ -41,7 +43,7 @@ export function WeeklyBars({ width, clock }: { width: number; clock: SharedValue
       <View style={{ width: total }}>
         <Canvas style={{ width: total, height: CHART_H + 4 }}>
           {WEEKS.map((w, i) => (
-            <Bar key={w.label} w={w} i={i} x={i * col} colW={col} clock={clock} />
+            <Bar key={w.label} w={w} i={i} x={i * col} colW={col} clock={clock} C={C} />
           ))}
           <Line p1={vec(0, CHART_H + 3.5)} p2={vec(total, CHART_H + 3.5)} color={C.ink} strokeWidth={1} />
         </Canvas>
@@ -75,7 +77,8 @@ function hatch(x: number, w: number, period: number) {
   return p.detach();
 }
 
-function Bar({ w, i, x, colW, clock }: { w: Week; i: number; x: number; colW: number; clock: SharedValue<number> }) {
+// Inside the Canvas (a separate React tree), so the palette arrives as a prop rather than from useTheme().
+function Bar({ w, i, x, colW, clock, C }: { w: Week; i: number; x: number; colW: number; clock: SharedValue<number>; C: Palette }) {
   const bx = x + PAD;
   const bw = colW - PAD * 2;
   const stripes = useMemo(() => hatch(bx, bw, w.kind === 'past' ? 4.5 * Math.SQRT2 : 6 * Math.SQRT2), [bx, bw, w.kind]);
@@ -93,8 +96,7 @@ function Bar({ w, i, x, colW, clock }: { w: Week; i: number; x: number; colW: nu
   const doneRect = useDerivedValue(() => clipFor(w.h, grow.value));
   const tgtRect = useDerivedValue(() => Skia.XYWHRect(bx, CHART_H - w.tgt - 1, bw * tgtIn.value, 2));
 
-  const stripe =
-    w.kind === 'past' ? '#3B3A37' : w.kind === 'current' ? 'rgba(255,79,26,0.18)' : 'rgba(17,17,17,0.10)';
+  const stripe = w.kind === 'past' ? C.barStripe : w.kind === 'current' ? C.orangeWash : C.inkWash;
 
   return (
     <Group>
