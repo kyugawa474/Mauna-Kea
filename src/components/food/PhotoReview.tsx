@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Button, Field, NumpadDone, RemoveButton, SubHead, fmtNum, parseNum } from '@/components/food/ui';
+import { Button, Field, RemoveButton, SubHead, fmtNum, parseNum } from '@/components/food/ui';
 import { PhotoError, analyzePhoto, preparePhoto, type PhotoErrorCode } from '@/lib/foodApi';
 import { sumTotals, type Confidence, type FoodInput } from '@/lib/nutrition';
 import { themed, useTheme } from '@/state/Theme';
@@ -30,12 +30,18 @@ type State =
   | { phase: 'error'; code: PhotoErrorCode; message: string };
 
 const MACROS = ['kcal', 'carbs', 'protein', 'fat'] as const;
+/** Same per-entry limits as manual entry, so a slip of the keypad can't log 20,000 kcal. */
+const LIMIT: Record<NumKey, number> = { grams: 5000, kcal: 5000, carbs: 1000, protein: 1000, fat: 1000 };
+const invalid = (i: Item, k: NumKey) => {
+  const n = parseNum(i.text[k]) ?? 0;
+  return Number.isNaN(n) || n > LIMIT[k];
+};
 const CONF_LABEL: Record<Confidence, string> = { high: 'High', medium: 'Med', low: 'Low' };
 
 /** Item fields → a loggable food, or null if any number is invalid. */
 function toFood(i: Item): FoodInput | null {
+  if ((['grams', ...MACROS] as NumKey[]).some((k) => invalid(i, k))) return null;
   const n = MACROS.map((k) => parseNum(i.text[k]) ?? 0);
-  if (n.some(Number.isNaN)) return null;
   const [kcal, carbs, protein, fat] = n;
   return { name: i.name.trim() || 'Food', kcal: Math.round(kcal), carbs, protein, fat };
 }
@@ -199,7 +205,7 @@ export function PhotoReview({
           </View>
 
           {review.items.map((i) => {
-            const bad = (k: NumKey) => (Number.isNaN(parseNum(i.text[k]) ?? 0) ? '!' : undefined);
+            const bad = (k: NumKey) => (invalid(i, k) ? 'Check' : undefined);
             return (
               <View key={i.key} style={s.item}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>
@@ -239,7 +245,6 @@ export function PhotoReview({
           </View>
         </>
       )}
-      <NumpadDone />
     </ScrollView>
   );
 }

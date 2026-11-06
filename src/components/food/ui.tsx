@@ -1,29 +1,8 @@
 import type { ComponentRef, Ref } from 'react';
-import { InputAccessoryView, Platform, Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { themed, useTheme } from '@/state/Theme';
 import { DT, F, T, type Palette } from '@/theme';
-
-/** The decimal pad has no return key; this bar above it closes the keyboard. */
-export const NUMPAD_DONE = 'food-numpad-done';
-
-export function NumpadDone() {
-  const { C, caps } = useTheme();
-  if (Platform.OS !== 'ios') return null;
-  return (
-    <InputAccessoryView nativeID={NUMPAD_DONE} backgroundColor={C.bg}>
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', borderTopWidth: 1, borderTopColor: C.line }}>
-        <Pressable
-          onPress={() => TextInput.State.blurTextInput(TextInput.State.currentlyFocusedInput())}
-          accessibilityRole="button"
-          style={{ paddingHorizontal: 20, paddingVertical: 12 }}
-        >
-          <Text maxFontSizeMultiplier={DT.strip} style={[caps, { color: C.accentText }]}>Done</Text>
-        </Pressable>
-      </View>
-    </InputAccessoryView>
-  );
-}
 
 /** "‹ Back" plus a caps title, the header of the panel's sub-views. */
 export function SubHead({ title, onBack }: { title: string; onBack: () => void }) {
@@ -59,7 +38,7 @@ export function Field({
           selectionColor={C.accentText}
           maxFontSizeMultiplier={DT.list}
           accessibilityLabel={unit ? `${label}, ${unit}` : label}
-          {...(numeric ? { keyboardType: 'decimal-pad' as const, inputAccessoryViewID: NUMPAD_DONE, selectTextOnFocus: true } : null)}
+          {...(numeric ? { keyboardType: 'decimal-pad' as const, selectTextOnFocus: true } : null)}
           style={[numeric ? s.numInput : s.textInput, inputStyle]}
           {...rest}
         />

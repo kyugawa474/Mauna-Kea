@@ -92,6 +92,7 @@ export function AddPanel() {
   const loggedKcal = Math.round(entries.reduce((n, e) => n + e.kcal, 0));
 
   const done = (what: string) => {
+    Keyboard.dismiss();
     setMode({ kind: 'list' });
     setFlash(`Logged ${what} to ${meal.toLowerCase()}`);
   };

@@ -1,7 +1,7 @@
 import { useRef, useState, type ComponentRef } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 
-import { Button, Field, NumpadDone, SubHead, parseNum } from '@/components/food/ui';
+import { Button, Field, SubHead, parseNum } from '@/components/food/ui';
 import type { FoodInput } from '@/lib/nutrition';
 import { useTheme } from '@/state/Theme';
 import { DT, F, T } from '@/theme';
@@ -50,7 +50,9 @@ export function ManualEntry({ meal, onBack, onSave }: { meal: string; onBack: ()
 
   const set = (k: Key) => (t: string) => {
     setV((p) => ({ ...p, [k]: t }));
-    if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
+    // Typing a macro can satisfy "Enter kcal or macros", so it clears the kcal error too.
+    const clears = k === 'name' || k === 'kcal' ? [k] : [k, 'kcal'];
+    if (clears.some((c) => errors[c as Key])) setErrors((e) => ({ ...e, ...Object.fromEntries(clears.map((c) => [c, undefined])) }));
   };
 
   const auto = parseNum(v.kcal) === null ? validateManual({ ...v, name: v.name || 'x' }).food?.kcal : undefined;
@@ -112,7 +114,6 @@ export function ManualEntry({ meal, onBack, onSave }: { meal: string; onBack: ()
         {errors.form ? <Text style={[caps, { color: C.accentText }]}>{errors.form}</Text> : null}
         <Button label={saving ? 'Saving…' : `Log to ${meal}`} onPress={save} disabled={saving} />
       </View>
-      <NumpadDone />
     </ScrollView>
   );
 }
