@@ -4,8 +4,8 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import { DAYS, RECENT_FOODS, TODAY_INDEX, WEEK, type DayVariant } from '@/data/sample';
 
 export type ThuPhase = 'thu_start' | 'thu_mid' | 'thu_end';
-/** What a day has logged: nothing, a meal only, or a meal plus an activity. */
-export type DayLog = 'none' | 'meal' | 'both';
+/** What a day has logged: nothing, a meal only, or an activity (with or without a meal). */
+export type DayLog = 'none' | 'meal' | 'active';
 export const MEALS = ['Breakfast', 'Lunch', 'Snack', 'Dinner'] as const;
 export type Meal = (typeof MEALS)[number];
 
@@ -91,14 +91,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [committed, variant]);
 
   // A meal counts once any kcal are eaten (in the sample data or committed from the food log);
-  // an activity once any kJ are ridden. An activity with no meal logged shows as nothing yet.
+  // an activity once any kJ are ridden. Any activity fills the day, meal or not.
   const weekLog = useMemo(
     () =>
       WEEK.map((_, i): DayLog => {
         const v = variantFor(i);
         const d = DAYS[v];
         const meal = d.left < d.of || Object.values(committed[v] ?? {}).some(Boolean);
-        return meal ? (d.kj > 0 ? 'both' : 'meal') : 'none';
+        return d.kj > 0 ? 'active' : meal ? 'meal' : 'none';
       }),
     [variantFor, committed],
   );

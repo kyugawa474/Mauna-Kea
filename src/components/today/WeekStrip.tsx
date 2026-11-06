@@ -6,13 +6,13 @@ import { DT, F, T, px, type Palette } from '@/theme';
 
 const LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const LOG_LABEL: Record<DayLog, string> = { none: 'nothing logged', meal: 'meal logged', both: 'meal and activity logged' };
+const LOG_LABEL: Record<DayLog, string> = { none: 'nothing logged', meal: 'meal logged', active: 'activity logged' };
 
 /**
  * The week, one mark per day:
  *   no circle  – nothing logged
  *   outlined   – a meal logged, no activity
- *   filled     – a meal and an activity logged
+ *   filled     – an activity logged (with or without a meal)
  * The selected day carries a thin ring around its mark.
  */
 export function WeekStrip({ selected, onSelect }: { selected: number; onSelect?: (i: number) => void }) {
@@ -38,12 +38,12 @@ export function WeekStrip({ selected, onSelect }: { selected: number; onSelect?:
               style={[
                 styles.mark,
                 log === 'meal' && { borderWidth: 1.5, borderColor: C.accent },
-                log === 'both' && { backgroundColor: C.accent },
+                log === 'active' && { backgroundColor: C.accent },
               ]}
             />
             <Text
               maxFontSizeMultiplier={DT.strip}
-              style={[styles.letter, { color: log === 'both' ? C.onAccent : log === 'meal' ? C.accentText : C.grey }]}
+              style={[styles.letter, { color: log === 'active' ? C.onAccent : log === 'meal' ? C.accentText : C.grey }]}
             >
               {l}
             </Text>
