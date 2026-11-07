@@ -21,15 +21,29 @@
       "package": "com.kyleyugawa.maunakea"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "server"
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-web-browser",
+      "expo-secure-store"
     ],
     "scheme": "maunakea",
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "4140abdc-2693-4d58-9759-06bb1fe56a1a"
+      }
+    },
+    "owner": "kyu474"
   }
 }

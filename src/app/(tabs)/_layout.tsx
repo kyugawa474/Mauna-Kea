@@ -1,7 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { NativeTabs } from 'expo-router/native-tabs';
 
-import { TODAY_INDEX } from '@/data/sample';
 import { useApp } from '@/state/AppState';
 import { useTheme } from '@/state/Theme';
 import { F } from '@/theme';
@@ -23,7 +22,7 @@ const TRAINING = require('../../../assets/tabs/training.png');
  * The food log itself is rendered inside each screen so it sits under the floating bar.
  */
 export default function TabsLayout() {
-  const { addOpen, setAddOpen, setDayIndex } = useApp();
+  const { addOpen, setAddOpen, setDayIndex, data } = useApp();
   const { C, scheme } = useTheme();
   const dark = scheme === 'dark';
 
@@ -42,7 +41,7 @@ export default function TabsLayout() {
         contentStyle={{ backgroundColor: C.bg }}
         listeners={({ navigation }) => ({
           // Tapping Today while on Today jumps back to today's date.
-          tabPress: () => navigation.isFocused() && setDayIndex(TODAY_INDEX),
+          tabPress: () => navigation.isFocused() && setDayIndex(data.todayIndex),
         })}
       >
         <NativeTabs.Trigger.Icon src={TODAY} renderingMode="template" />

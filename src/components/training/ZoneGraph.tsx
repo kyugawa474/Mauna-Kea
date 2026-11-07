@@ -4,7 +4,8 @@ import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
-import { ZONE_BLOCKS, ZONE_COLORS, ZONE_TICKS } from '@/data/sample';
+import { ZONE_COLORS } from '@/data/sample';
+import { useApp } from '@/state/AppState';
 import { useTheme } from '@/state/Theme';
 import { DT, F, useLayout, T, zoneColor, type Palette } from '@/theme';
 
@@ -32,6 +33,7 @@ const ease = (t: number) => {
  */
 export function ZoneGraph({ width, clock }: { width: number; clock: SharedValue<number> }) {
   const { stackTiles } = useLayout();
+  const { zoneTicks: ZONE_TICKS, zoneBlocks: ZONE_BLOCKS } = useApp().data;
   const { C, caps, scheme } = useTheme();
   const ink = (dataInk: string) => (scheme === 'dark' ? C.onAccent : dataInk);
   const k = width / W;
