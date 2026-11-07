@@ -71,14 +71,12 @@ Rides come from Strava once you connect (Training → **Connect Strava**); until
 2. Set **Authorization Callback Domain** to `localhost`. The app redirects to `maunakea://localhost/strava` (dev and release builds) or `exp://localhost:<port>/--/strava` (Expo Go), and Strava accepts any redirect whose host is `localhost`.
 3. `cp .env.example .env.local` and fill in `EXPO_PUBLIC_STRAVA_CLIENT_ID`, `STRAVA_CLIENT_ID` and `STRAVA_CLIENT_SECRET` from that page. `.env.local` is git-ignored.
 4. Run `npx expo start` and connect. Metro serves the API routes, so nothing else is needed locally.
-5. For release builds, deploy the routes to Expo Hosting:
+5. Release builds use the routes on EAS Hosting at https://mauna-kea.expo.app (EAS project `@kyu474/mauna-kea`). The production EAS environment holds `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET` (secret), `EXPO_PUBLIC_STRAVA_CLIENT_ID` and `EXPO_PUBLIC_API_ORIGIN`. Local Release builds get the origin from the committed `.env.production`. To redeploy after changing the routes:
    ```bash
-   npx eas-cli@latest env:set --name STRAVA_CLIENT_ID --value <id> --environment production --visibility plaintext
-   npx eas-cli@latest env:set --name STRAVA_CLIENT_SECRET --value <secret> --environment production --visibility secret
    npx expo export --platform web --no-ssg
    npx eas-cli@latest deploy --prod --environment production
    ```
-   Then add `EXPO_PUBLIC_STRAVA_CLIENT_ID` and `EXPO_PUBLIC_API_ORIGIN` (the deployment URL, for example `https://mauna-kea.expo.app`) as plaintext variables in the build's environment, so the release app knows where the token routes are.
+   To change a variable: `npx eas-cli@latest env:set --environment production --name <NAME> --value <value> --visibility <plaintext|secret>`, then redeploy.
 
 FTP (242 W), weight (72 kg unless Strava returns one) and heart-rate zones are constants in `src/data/strava.ts` for now; reading the athlete's own needs the `profile:read_all` scope. Daily kJ targets, the plan weeks and nutrition still come from the sample.
 
