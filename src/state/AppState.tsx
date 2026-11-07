@@ -6,6 +6,8 @@ import * as Strava from '@/data/strava';
 import { SAMPLE_DATA, type TrainingData } from '@/data/training';
 
 export type ThuPhase = 'thu_start' | 'thu_mid' | 'thu_end';
+/** What a day has logged: nothing, a meal only, or an activity (with or without a meal). */
+export type DayLog = 'none' | 'meal' | 'active';
 export const MEALS = ['Breakfast', 'Lunch', 'Snack', 'Dinner'] as const;
 export type Meal = (typeof MEALS)[number];
 
@@ -48,6 +50,8 @@ interface AppState {
   /** Ticked in the add panel but not yet committed. */
   picked: Record<number, boolean>;
   togglePick: (foodIndex: number) => void;
+  /** Per weekday (Mon–Sun), what has been logged; drives the week strip's marks. */
+  weekLog: DayLog[];
   /** Totals for the current day including committed foods. */
   totals: { gP: number; gC: number; gF: number; left: number; addedKcal: number };
 }
@@ -69,8 +73,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const live = data.source === 'strava';
   // The variant keys food picks per weekday. Thursday's phases and Saturday's done state are
   // sample-only previews; live days come straight from the data.
-  const variant: DayVariant =
-    !live && dayIndex === 3 ? thuPhase : !live && dayIndex === 5 && satDone ? 'sat_done' : (WEEK[dayIndex] as DayVariant);
+  const variantFor = useCallback(
+    (i: number): DayVariant =>
+      !live && i === 3 ? thuPhase : !live && i === 5 && satDone ? 'sat_done' : (WEEK[i] as DayVariant),
+    [live, thuPhase, satDone],
+  );
+  const variant = variantFor(dayIndex);
   const day = live ? data.days[dayIndex] : DAYS[variant];
   const dayAt = useCallback(
     (i: number) => (live ? data.days[i] : DAYS[(i === 3 ? 'thu_start' : WEEK[i]) as DayVariant]),
@@ -168,11 +176,24 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return { gP: base.gP + aP, gC: base.gC + aC, gF: base.gF + aF, left: Math.max(0, base.left - aK), addedKcal: aK };
   }, [committed, variant, day]);
 
+  // A meal counts once any kcal are eaten (in the sample data or committed from the food log);
+  // an activity once any kJ are ridden. Any activity fills the day, meal or not.
+  const weekLog = useMemo(
+    () =>
+      WEEK.map((_, i): DayLog => {
+        const v = variantFor(i);
+        const d = live ? data.days[i] : DAYS[v];
+        const meal = d.left < d.of || Object.values(committed[v] ?? {}).some(Boolean);
+        return d.kj > 0 ? 'active' : meal ? 'meal' : 'none';
+      }),
+    [variantFor, committed, live, data],
+  );
+
   const value: AppState = {
     data, day, dayAt, strava, connectStrava, disconnectStrava, syncStrava,
     dayIndex, setDayIndex, thuPhase, cycleThuPhase, satDone, toggleSatDone, variant,
     addOpen, setAddOpen, meal, setMeal,
-    picked: picks[variant] ?? {}, togglePick, totals,
+    picked: picks[variant] ?? {}, togglePick, weekLog, totals,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

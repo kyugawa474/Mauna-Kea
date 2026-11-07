@@ -1,24 +1,28 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { WeekMark as Mark } from '@/data/training';
-import { useApp } from '@/state/AppState';
+import { useApp, type DayLog } from '@/state/AppState';
 import { themed, useTheme } from '@/state/Theme';
 import { DT, F, T, px, type Palette } from '@/theme';
 
 const LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const MARK_LABEL: Record<Mark, string> = { fuelled: 'fuelled', rode: 'rode', rest: 'rest day', planned: 'planned' };
+const LOG_LABEL: Record<DayLog, string> = { none: 'nothing logged', meal: 'meal logged', active: 'activity logged' };
 
+/**
+ * The week, one mark per day:
+ *   no circle  – nothing logged
+ *   outlined   – a meal logged, no activity
+ *   filled     – an activity logged (with or without a meal)
+ * The selected day carries a thin ring around its mark.
+ */
 export function WeekStrip({ selected, onSelect }: { selected: number; onSelect?: (i: number) => void }) {
   const { C } = useTheme();
-  const { data } = useApp();
-  const MARKS = data.weekMarks;
+  const { weekLog } = useApp();
   const styles = useStyles();
   return (
     <View style={styles.row}>
       {LETTERS.map((l, i) => {
-        const m = MARKS[i];
-        const filled = m === 'rode';
+        const log = weekLog[i];
         return (
           <Pressable
             key={i}
@@ -26,20 +30,23 @@ export function WeekStrip({ selected, onSelect }: { selected: number; onSelect?:
             hitSlop={4}
             style={styles.cell}
             accessibilityRole="button"
-            accessibilityLabel={`${NAMES[i]}, ${MARK_LABEL[m]}`}
+            accessibilityLabel={`${NAMES[i]}, ${LOG_LABEL[log]}`}
             accessibilityState={{ selected: i === selected }}
           >
             {i === selected && <View style={styles.sel} />}
             <View
               style={[
                 styles.mark,
-                m === 'fuelled' && { borderWidth: 1.5, borderColor: C.accent },
-                filled && { backgroundColor: C.accent },
-                m === 'rest' && { borderWidth: 1.2, borderColor: C.grey2, borderStyle: 'dashed' },
-                m === 'planned' && { borderWidth: 1.2, borderColor: C.line },
+                log === 'meal' && { borderWidth: 1.5, borderColor: C.accent },
+                log === 'active' && { backgroundColor: C.accent },
               ]}
             />
-            <Text maxFontSizeMultiplier={DT.strip} style={[styles.letter, { color: filled ? C.onAccent : m === 'fuelled' ? C.accentText : C.grey }]}>{l}</Text>
+            <Text
+              maxFontSizeMultiplier={DT.strip}
+              style={[styles.letter, { color: log === 'active' ? C.onAccent : log === 'meal' ? C.accentText : C.grey }]}
+            >
+              {l}
+            </Text>
           </Pressable>
         );
       })}
