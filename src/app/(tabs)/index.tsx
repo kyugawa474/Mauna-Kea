@@ -316,9 +316,6 @@ export default function TodayScreen() {
           </Animated.View>
         )}
 
-        {/* fixed separator under the week strip */}
-        <View pointerEvents="none" style={[styles.sep, { top: 133 * s + dy, left: 20 * s, right: 20 * s }]} />
-
         {dayIndex !== TODAY_INDEX && (
           <Pressable onPress={() => setDayIndex(TODAY_INDEX)} style={[styles.todayBtn, { top: 44 * s + dy }]} hitSlop={8}>
             <Text maxFontSizeMultiplier={DT.fixed} style={[caps, { color: C.accentText }]}>Today</Text>
@@ -421,7 +418,6 @@ const useStyles = themed((C: Palette) => StyleSheet.create({
   cell: { flex: 1, gap: 6, borderTopWidth: 3, paddingTop: 10 },
   mid: { fontFamily: F.light, fontSize: T.mid, letterSpacing: -0.5, color: C.ink },
   unit: { fontFamily: F.mono, fontSize: T.label, color: C.grey },
-  sep: { position: 'absolute', height: 1, backgroundColor: C.ink, zIndex: 6 },
   todayBtn: { position: 'absolute', right: 8, padding: 12, zIndex: 40 },
   shrink: { flexShrink: 1 },
   hint: { position: 'absolute', paddingHorizontal: 20, left: 0, right: 0, alignItems: 'center', zIndex: 7 },
