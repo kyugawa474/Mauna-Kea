@@ -95,7 +95,7 @@ export default function TrainingScreen() {
         </Text>
       </View>
 
-      <Section title="Consistency" right="12 weeks">
+      <Section title="Consistency" right="12 weeks" rule={false}>
         <Consistency clock={clock} width={inner} data={data.consistency} />
       </Section>
 
@@ -161,18 +161,21 @@ export default function TrainingScreen() {
 function Section({
   title,
   right,
+  rule = true,
   onLayout,
   children,
 }: {
   title: string;
   right?: string;
+  /** The ink rule above the section; the first section goes without one. */
+  rule?: boolean;
   onLayout?: (e: LayoutChangeEvent) => void;
   children: React.ReactNode;
 }) {
   const { C, caps } = useTheme();
   const styles = useStyles();
   return (
-    <View style={styles.section} onLayout={onLayout}>
+    <View style={[styles.section, !rule && styles.noRule]} onLayout={onLayout}>
       <View style={styles.sectionHead}>
         <Text maxFontSizeMultiplier={DT.list} style={caps}>{title}</Text>
         {right && <Text maxFontSizeMultiplier={DT.list} style={[caps, { color: C.grey }]}>{right}</Text>}
@@ -290,6 +293,7 @@ const useStyles = themed((C: Palette) => StyleSheet.create({
     marginHorizontal: -20, paddingHorizontal: 20, borderTopWidth: 1, borderTopColor: C.ink,
     paddingTop: 14, paddingBottom: 26, gap: 12,
   },
+  noRule: { borderTopWidth: 0 },
   sectionHead: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12, justifyContent: 'space-between', alignItems: 'baseline' },
   baseline: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 8 },
   big: { fontFamily: F.thin, fontSize: T.display, letterSpacing: -2.2, lineHeight: 56, color: C.ink },
