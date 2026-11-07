@@ -63,6 +63,25 @@ npx expo lint      # lint
 
 To preview the three Thursday states (start, mid, end of day), long-press the date label on Thursday.
 
+### Strava
+
+Rides come from Strava once you connect (Training → **Connect Strava**); until then the app shows the sample data. The client secret lives only on the server: two Expo Router API routes (`src/app/api/strava/token+api.ts`, `refresh+api.ts`) exchange and refresh tokens. Tokens are kept in SecureStore; rides are cached in `strava-cache.json` in the app's documents folder, and each sync asks Strava only for rides newer than the last one.
+
+1. Create an API application at https://www.strava.com/settings/api. New apps are limited to one athlete (you), which is fine here.
+2. Set **Authorization Callback Domain** to `localhost`. The app redirects to `maunakea://localhost/strava` (dev and release builds) or `exp://localhost:<port>/--/strava` (Expo Go), and Strava accepts any redirect whose host is `localhost`.
+3. `cp .env.example .env.local` and fill in `EXPO_PUBLIC_STRAVA_CLIENT_ID`, `STRAVA_CLIENT_ID` and `STRAVA_CLIENT_SECRET` from that page. `.env.local` is git-ignored.
+4. Run `npx expo start` and connect. Metro serves the API routes, so nothing else is needed locally.
+5. For release builds, deploy the routes to Expo Hosting:
+   ```bash
+   npx eas-cli@latest env:set --name STRAVA_CLIENT_ID --value <id> --environment production --visibility plaintext
+   npx eas-cli@latest env:set --name STRAVA_CLIENT_SECRET --value <secret> --environment production --visibility secret
+   npx expo export --platform web --no-ssg
+   npx eas-cli@latest deploy --prod --environment production
+   ```
+   Then add `EXPO_PUBLIC_STRAVA_CLIENT_ID` and `EXPO_PUBLIC_API_ORIGIN` (the deployment URL, for example `https://mauna-kea.expo.app`) as plaintext variables in the build's environment, so the release app knows where the token routes are.
+
+FTP (242 W), weight (72 kg unless Strava returns one) and heart-rate zones are constants in `src/data/strava.ts` for now; reading the athlete's own needs the `profile:read_all` scope. Daily kJ targets, the plan weeks and nutrition still come from the sample.
+
 ### Layout
 
 ```
@@ -76,7 +95,12 @@ src/
     today/             SunCanvas (sun + power rays), FrostCanvas (water + macro rings), WeekStrip
     training/          WeeklyBars, ZoneGraph
     NavBar.tsx, AddPanel.tsx
+  app/strava.tsx       connect / disconnect Strava (modal)
+  app/api/strava/      token exchange and refresh (server only)
   data/sample.ts       all sample data
+  data/training.ts     the data shape screens read, and the sample fallback
+  data/strava.ts       Strava session, on-device ride cache, mapping to that shape
+  server/strava.ts     server-side token helper (holds the client secret)
   lib/frost.ts         the frost-edge model that drives the Today screen
   state/AppState.tsx   selected day, food log, committed totals
   theme.ts             colours, fonts, design-px scaling
@@ -95,6 +119,6 @@ The design was drawn on a 390 × 844 frame. Positions are kept in "design px" an
 
 ## Next milestones
 
-1. Real data: Strava OAuth for rides and zones, and a food log store.
+1. Real data: Strava rides are in (see above); a food log store is next.
 2. Targets engine: daily kJ and macro targets from the training plan.
 3. TestFlight build.

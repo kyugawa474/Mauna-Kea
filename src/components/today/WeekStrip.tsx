@@ -1,17 +1,18 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import type { WeekMark as Mark } from '@/data/training';
+import { useApp } from '@/state/AppState';
 import { themed, useTheme } from '@/state/Theme';
 import { DT, F, T, px, type Palette } from '@/theme';
 
 const LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-type Mark = 'fuelled' | 'rode' | 'rest' | 'planned';
 const MARK_LABEL: Record<Mark, string> = { fuelled: 'fuelled', rode: 'rode', rest: 'rest day', planned: 'planned' };
-/** Sample-week status per day. */
-const MARKS: Mark[] = ['fuelled', 'rode', 'rest', 'rode', 'planned', 'planned', 'planned'];
 
 export function WeekStrip({ selected, onSelect }: { selected: number; onSelect?: (i: number) => void }) {
   const { C } = useTheme();
+  const { data } = useApp();
+  const MARKS = data.weekMarks;
   const styles = useStyles();
   return (
     <View style={styles.row}>
